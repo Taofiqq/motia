@@ -17,8 +17,11 @@ If you prefer to jump straight into coding, we’ve got you covered with the int
 
 Before we go into building your first API, let’s get familiar with the core concepts you’ll work with in Motia:
 
-- **Step** – The smallest unit of logic in Motia. Each Step runs a piece of code in your chosen language.
-- **API Step** – A Step that exposes an HTTP endpoint and handles incoming requests.
-- **Flow** – A sequence of connected Steps that execute in order.
-- **State** – Persistent storage for data that Steps and Flows can read and update.
-- **Event Step** – A Step that listens for and processes asynchronous events.
+## Motia Concepts You'll Use
+
+- **Step** – The building block of all Motia logic. Unlike traditional functions, Steps can be triggered by HTTP requests, events, or schedules.
+- **API Step** – Exposes HTTP endpoints with built-in TypeScript validation and connects directly to your workflow.
+- **Flow** – Groups related Steps together for visual organization and debugging in the Workbench.
+- **State** – Built-in key-value storage that's automatically traced and shared across all Steps.
+- **Event Step** – Handles asynchronous processing triggered by other Steps—no separate queue system needed.
+
