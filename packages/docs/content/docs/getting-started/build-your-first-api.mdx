@@ -51,48 +51,138 @@ Create a new file for your first endpoint:
 
 **File:** `steps/create-pet.step.ts`
 
-```typescript 
-import { ApiRouteConfig, Handlers } from 'motia'
-import { z } from 'zod'
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+    import { ApiRouteConfig, Handlers } from 'motia'
+    import { z } from 'zod'
 
-export const config: ApiRouteConfig = {
-  type: 'api',
-  name: 'CreatePet',
-  description: 'Create a new pet in the store',
-  method: 'POST',
-  path: '/pets',
-  
-  bodySchema: z.object({
-    name: z.string(),
-    breed: z.string(),
-    age: z.number(),
-  }),
+    export const config: ApiRouteConfig = {
+      type: 'api',
+      name: 'CreatePet',
+      description: 'Create a new pet in the store',
+      method: 'POST',
+      path: '/pets',
+      
+      bodySchema: z.object({
+        name: z.string(),
+        breed: z.string(),
+        age: z.number(),
+      }),
 
-  responseSchema: {
-    200: z.object({
-      id: z.string(),
-      name: z.string(),
-      breed: z.string(),
-      age: z.number(),
-    }),
-  },
-}
+      responseSchema: {
+        200: z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        }),
+      },
+    }
 
-export const handler: Handlers['CreatePet'] = async (req, { logger }) => {
-  logger.info('Creating new pet', { body: req.body })
+    export const handler: Handlers['CreatePet'] = async (req, { logger }) => {
+      logger.info('Creating new pet', { body: req.body })
 
-  // In a real app, you'd save to a database
-  const newPet = {
-    id: Date.now().toString(),
-    ...req.body,
-  }
+      // In a real app, you will save to a database
+      const newPet = {
+        id: Date.now().toString(),
+        ...req.body,
+      }
 
-  return {
-    status: 200,
-    body: newPet,
-  }
-}
-```
+      return {
+        status: 200,
+        body: newPet,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    const { z } = require('zod')
+
+    exports.config = {
+      type: 'api',
+      name: 'CreatePet',
+      description: 'Create a new pet in the store',
+      method: 'POST',
+      path: '/pets',
+      
+      bodySchema: z.object({
+        name: z.string(),
+        breed: z.string(),
+        age: z.number(),
+      }),
+
+      responseSchema: {
+        200: z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        }),
+      },
+    }
+
+    exports.handler = async (req, { logger }) => {
+      logger.info('Creating new pet', { body: req.body })
+
+      // In a real app, you will save to a database
+      const newPet = {
+        id: Date.now().toString(),
+        ...req.body,
+      }
+
+      return {
+        status: 200,
+        body: newPet,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from pydantic import BaseModel
+
+    class PetRequest(BaseModel):
+        name: str
+        breed: str
+        age: int
+
+    class PetResponse(BaseModel):
+        id: str
+        name: str
+        breed: str
+        age: int
+
+    config = {
+        'type': 'api',
+        'name': 'CreatePet',
+        'description': 'Create a new pet in the store',
+        'method': 'POST',
+        'path': '/pets',
+        'bodySchema': PetRequest.model_json_schema(),
+        'responseSchema': {
+            '200': PetResponse.model_json_schema()
+        }
+    }
+
+    async def handler(req, context):
+        context.logger.info('Creating new pet', {'body': req.get('body')})
+        
+        # In a real app, you will save to a database
+        import time
+        new_pet = {
+            'id': str(int(time.time() * 1000)),
+            **req.get('body')
+        }
+        
+        return {
+            'status': 200,
+            'body': new_pet
+        }
+    ```
+  </Tab>
+</Tabs>
 
 The most fundamental part of any API endpoint is defining what HTTP method it accepts and where it lives:
 
@@ -125,46 +215,124 @@ Create a new file to list all pets in the store:
 
 **File:** `steps/get-pets.step.ts`
 
-```typescript
-import { ApiRouteConfig, Handlers } from "motia";
-import { z } from "zod";
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+    import { ApiRouteConfig, Handlers } from 'motia'
+    import { z } from 'zod'
 
-export const config: ApiRouteConfig = {
-  type: "api",
-  name: "GetPets",
-  description: "Get all pets in the store",
-  method: "GET",
-  path: "/pets",
-  responseSchema: {
-    200: z.object({
-      pets: z.array(
-        z.object({
+    export const config: ApiRouteConfig = {
+      type: 'api',
+      name: 'GetPets',
+      description: 'Get all pets in the store',
+      method: 'GET',
+      path: '/pets',
+      
+      responseSchema: {
+        200: z.array(z.object({
           id: z.string(),
           name: z.string(),
           breed: z.string(),
           age: z.number(),
-        })
-      ),
-    }),
-  },
-  emits: ["process-food-order"],
-};
+        })),
+      },
+    }
 
-export const handler: Handlers["GetPets"] = async (req: any, { logger }) => {
-  logger.info("Retrieving all pets");
+    export const handler: Handlers['GetPets'] = async (req, { logger }) => {
+      logger.info('Retrieving all pets')
 
-  // In a real app, you'd fetch from a database
-  const pets = [
-    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
-    { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
-  ];
+      // In a real app, you'd fetch from a database
+      const pets = [
+        { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+        { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+      ]
 
-  return {
-    status: 200,
-    body: { pets },
-  };
-};
-```
+      return {
+        status: 200,
+        body: pets,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    const { z } = require('zod')
+
+    exports.config = {
+      type: 'api',
+      name: 'GetPets',
+      description: 'Get all pets in the store',
+      method: 'GET',
+      path: '/pets',
+      
+      responseSchema: {
+        200: z.array(z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        })),
+      },
+    }
+
+    exports.handler = async (req, { logger }) => {
+      logger.info('Retrieving all pets')
+
+      // In a real app, you'd fetch from a database
+      const pets = [
+        { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+        { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+      ]
+
+      return {
+        status: 200,
+        body: pets,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from pydantic import BaseModel
+    from typing import List
+
+    class PetResponse(BaseModel):
+        id: str
+        name: str
+        breed: str
+        age: int
+
+    config = {
+        'type': 'api',
+        'name': 'GetPets',
+        'description': 'Get all pets in the store',
+        'method': 'GET',
+        'path': '/pets',
+        'responseSchema': {
+            '200': {
+                'type': 'array',
+                'items': PetResponse.model_json_schema()
+            }
+        }
+    }
+
+    async def handler(req, context):
+        context.logger.info('Retrieving all pets')
+        
+        # In a real app, you'd fetch from a database
+        pets = [
+            {'id': '1', 'name': 'Buddy', 'breed': 'Golden Retriever', 'age': 3},
+            {'id': '2', 'name': 'Max', 'breed': 'German Shepherd', 'age': 5},
+        ]
+        
+        return {
+            'status': 200,
+            'body': pets
+        }
+    ```
+  </Tab>
+</Tabs>
+
 ![Get All Pets](./../img/get-all-pets.png)
 
 ### Get Pet by ID - `GET /pets/:id`
@@ -173,55 +341,158 @@ Create a new file to retrieve a specific pet:
 
 **File:** `steps/get-pet-by-id.step.ts`
 
-```typescript
-import { ApiRouteConfig, Handlers } from 'motia'
-import { z } from 'zod'
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+    import { ApiRouteConfig, Handlers } from 'motia'
+    import { z } from 'zod'
 
-export const config: ApiRouteConfig = {
-  type: 'api',
-  name: 'GetPetById',
-  description: 'Get a specific pet by ID',
-  method: 'GET',
-  path: '/pets/:id',
-  
-  responseSchema: {
-    200: z.object({
-      id: z.string(),
-      name: z.string(),
-      breed: z.string(),
-      age: z.number(),
-    }),
-    404: z.object({
-      error: z.string(),
-    }),
-  },
-}
-
-export const handler: Handlers['GetPetById'] = async (req, { logger }) => {
-  const petId = req.pathParams.id
-  logger.info('Retrieving pet by ID', { petId })
-
-  // In a real app, you'd search your database
-  const pets = [
-    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
-    { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
-  ]
-
-  const pet = pets.find(p => p.id === petId)
-
-  if (!pet) {
-    return {
-      status: 404,
-      body: { error: 'Pet not found' },
+    export const config: ApiRouteConfig = {
+      type: 'api',
+      name: 'GetPetById',
+      description: 'Get a specific pet by ID',
+      method: 'GET',
+      path: '/pets/:id',
+      
+      responseSchema: {
+        200: z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        }),
+        404: z.object({
+          error: z.string(),
+        }),
+      },
     }
-  }
 
-  return {
-    status: 200,
-    body: pet,
-  }
-}
-```
+    export const handler: Handlers['GetPetById'] = async (req, { logger }) => {
+      const petId = req.pathParams.id
+      logger.info('Retrieving pet by ID', { petId })
+
+      // In a real app, you'd search your database
+      const pets = [
+        { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+        { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+      ]
+
+      const pet = pets.find(p => p.id === petId)
+
+      if (!pet) {
+        return {
+          status: 404,
+          body: { error: 'Pet not found' },
+        }
+      }
+
+      return {
+        status: 200,
+        body: pet,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    const { z } = require('zod')
+
+    exports.config = {
+      type: 'api',
+      name: 'GetPetById',
+      description: 'Get a specific pet by ID',
+      method: 'GET',
+      path: '/pets/:id',
+      
+      responseSchema: {
+        200: z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        }),
+        404: z.object({
+          error: z.string(),
+        }),
+      },
+    }
+
+    exports.handler = async (req, { logger }) => {
+      const petId = req.pathParams.id
+      logger.info('Retrieving pet by ID', { petId })
+
+      // In a real app, you'd search your database
+      const pets = [
+        { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+        { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+      ]
+
+      const pet = pets.find(p => p.id === petId)
+
+      if (!pet) {
+        return {
+          status: 404,
+          body: { error: 'Pet not found' },
+        }
+      }
+
+      return {
+        status: 200,
+        body: pet,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from pydantic import BaseModel
+
+    class PetResponse(BaseModel):
+        id: str
+        name: str
+        breed: str
+        age: int
+
+    class ErrorResponse(BaseModel):
+        error: str
+
+    config = {
+        'type': 'api',
+        'name': 'GetPetById',
+        'description': 'Get a specific pet by ID',
+        'method': 'GET',
+        'path': '/pets/:id',
+        'responseSchema': {
+            '200': PetResponse.model_json_schema(),
+            '404': ErrorResponse.model_json_schema()
+        }
+    }
+
+    async def handler(req, context):
+        pet_id = req.get('pathParams', {}).get('id')
+        context.logger.info('Retrieving pet by ID', {'petId': pet_id})
+        
+        # In a real app, you'd search your database
+        pets = [
+            {'id': '1', 'name': 'Buddy', 'breed': 'Golden Retriever', 'age': 3},
+            {'id': '2', 'name': 'Max', 'breed': 'German Shepherd', 'age': 5},
+        ]
+        
+        pet = next((p for p in pets if p['id'] == pet_id), None)
+        
+        if not pet:
+            return {
+                'status': 404,
+                'body': {'error': 'Pet not found'}
+            }
+        
+        return {
+            'status': 200,
+            'body': pet
+        }
+    ```
+  </Tab>
+</Tabs>
 ![Get One Pet](./../img/get-one-pet.png)
 
 ### Update Pet - `PUT /pets/:id`
@@ -230,66 +501,191 @@ Create a new file to update existing pets:
 
 **File:** `steps/update-pet.step.ts`
 
-```typescript
-import { ApiRouteConfig, Handlers } from 'motia'
-import { z } from 'zod'
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+    import { ApiRouteConfig, Handlers } from 'motia'
+    import { z } from 'zod'
 
-export const config: ApiRouteConfig = {
-  type: 'api',
-  name: 'UpdatePet',
-  description: 'Update a pet by ID',
-  method: 'PUT',
-  path: '/pets/:id',
-  
-  bodySchema: z.object({
-    name: z.string(),
-    breed: z.string(),
-    age: z.number(),
-  }),
+    export const config: ApiRouteConfig = {
+      type: 'api',
+      name: 'UpdatePet',
+      description: 'Update a pet by ID',
+      method: 'PUT',
+      path: '/pets/:id',
+      
+      bodySchema: z.object({
+        name: z.string(),
+        breed: z.string(),
+        age: z.number(),
+      }),
 
-  responseSchema: {
-    200: z.object({
-      id: z.string(),
-      name: z.string(),
-      breed: z.string(),
-      age: z.number(),
-    }),
-    404: z.object({
-      error: z.string(),
-    }),
-  },
-}
-
-export const handler: Handlers['UpdatePet'] = async (req, { logger }) => {
-  const petId = req.pathParams.id
-  logger.info('Updating pet', { petId, body: req.body })
-
-  // In a real app, you'd update your database
-  const pets = [
-    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
-    { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
-  ]
-
-  const petIndex = pets.findIndex(p => p.id === petId)
-
-  if (petIndex === -1) {
-    return {
-      status: 404,
-      body: { error: 'Pet not found' },
+      responseSchema: {
+        200: z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        }),
+        404: z.object({
+          error: z.string(),
+        }),
+      },
     }
-  }
 
-  const updatedPet = {
-    id: petId,
-    ...req.body,
-  }
+    export const handler: Handlers['UpdatePet'] = async (req, { logger }) => {
+      const petId = req.pathParams.id
+      logger.info('Updating pet', { petId, body: req.body })
 
-  return {
-    status: 200,
-    body: updatedPet,
-  }
-}
-```
+      // In a real app, you'd update your database
+      const pets = [
+        { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+        { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+      ]
+
+      const petIndex = pets.findIndex(p => p.id === petId)
+
+      if (petIndex === -1) {
+        return {
+          status: 404,
+          body: { error: 'Pet not found' },
+        }
+      }
+
+      const updatedPet = {
+        id: petId,
+        ...req.body,
+      }
+
+      return {
+        status: 200,
+        body: updatedPet,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    const { z } = require('zod')
+
+    exports.config = {
+      type: 'api',
+      name: 'UpdatePet',
+      description: 'Update a pet by ID',
+      method: 'PUT',
+      path: '/pets/:id',
+      
+      bodySchema: z.object({
+        name: z.string(),
+        breed: z.string(),
+        age: z.number(),
+      }),
+
+      responseSchema: {
+        200: z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        }),
+        404: z.object({
+          error: z.string(),
+        }),
+      },
+    }
+
+    exports.handler = async (req, { logger }) => {
+      const petId = req.pathParams.id
+      logger.info('Updating pet', { petId, body: req.body })
+
+      // In a real app, you'd update your database
+      const pets = [
+        { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+        { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+      ]
+
+      const petIndex = pets.findIndex(p => p.id === petId)
+
+      if (petIndex === -1) {
+        return {
+          status: 404,
+          body: { error: 'Pet not found' },
+        }
+      }
+
+      const updatedPet = {
+        id: petId,
+        ...req.body,
+      }
+
+      return {
+        status: 200,
+        body: updatedPet,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from pydantic import BaseModel
+
+    class PetRequest(BaseModel):
+        name: str
+        breed: str
+        age: int
+
+    class PetResponse(BaseModel):
+        id: str
+        name: str
+        breed: str
+        age: int
+
+    class ErrorResponse(BaseModel):
+        error: str
+
+    config = {
+        'type': 'api',
+        'name': 'UpdatePet',
+        'description': 'Update a pet by ID',
+        'method': 'PUT',
+        'path': '/pets/:id',
+        'bodySchema': PetRequest.model_json_schema(),
+        'responseSchema': {
+            '200': PetResponse.model_json_schema(),
+            '404': ErrorResponse.model_json_schema()
+        }
+    }
+
+    async def handler(req, context):
+        pet_id = req.get('pathParams', {}).get('id')
+        context.logger.info('Updating pet', {'petId': pet_id, 'body': req.get('body')})
+        
+        # In a real app, you'd update your database
+        pets = [
+            {'id': '1', 'name': 'Buddy', 'breed': 'Golden Retriever', 'age': 3},
+            {'id': '2', 'name': 'Max', 'breed': 'German Shepherd', 'age': 5},
+        ]
+        
+        pet_index = next((i for i, p in enumerate(pets) if p['id'] == pet_id), -1)
+        
+        if pet_index == -1:
+            return {
+                'status': 404,
+                'body': {'error': 'Pet not found'}
+            }
+        
+        updated_pet = {
+            'id': pet_id,
+            **req.get('body')
+        }
+        
+        return {
+            'status': 200,
+            'body': updated_pet
+        }
+    ```
+  </Tab>
+</Tabs>
 
 ### Delete Pet - `DELETE /pets/:id`
 
@@ -297,52 +693,150 @@ Create a new file to remove pets from the store:
 
 **File:** `steps/delete-pet.step.ts`
 
-```typescript
-import { ApiRouteConfig, Handlers } from 'motia'
-import { z } from 'zod'
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+    import { ApiRouteConfig, Handlers } from 'motia'
+    import { z } from 'zod'
 
-export const config: ApiRouteConfig = {
-  type: 'api',
-  name: 'DeletePet',
-  description: 'Delete a pet by ID',
-  method: 'DELETE',
-  path: '/pets/:id',
-  
-  responseSchema: {
-    200: z.object({
-      message: z.string(),
-    }),
-    404: z.object({
-      error: z.string(),
-    }),
-  },
-}
-
-export const handler: Handlers['DeletePet'] = async (req, { logger }) => {
-  const petId = req.pathParams.id
-  logger.info('Deleting pet', { petId })
-
-  // In a real app, you'd remove from your database
-  const pets = [
-    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
-    { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
-  ]
-
-  const petExists = pets.some(p => p.id === petId)
-
-  if (!petExists) {
-    return {
-      status: 404,
-      body: { error: 'Pet not found' },
+    export const config: ApiRouteConfig = {
+      type: 'api',
+      name: 'DeletePet',
+      description: 'Delete a pet by ID',
+      method: 'DELETE',
+      path: '/pets/:id',
+      
+      responseSchema: {
+        200: z.object({
+          message: z.string(),
+        }),
+        404: z.object({
+          error: z.string(),
+        }),
+      },
     }
-  }
 
-  return {
-    status: 200,
-    body: { message: `Pet with ID ${petId} has been deleted` },
-  }
-}
-```
+    export const handler: Handlers['DeletePet'] = async (req, { logger }) => {
+      const petId = req.pathParams.id
+      logger.info('Deleting pet', { petId })
+
+      // In a real app, you'd remove from your database
+      const pets = [
+        { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+        { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+      ]
+
+      const petExists = pets.some(p => p.id === petId)
+
+      if (!petExists) {
+        return {
+          status: 404,
+          body: { error: 'Pet not found' },
+        }
+      }
+
+      return {
+        status: 200,
+        body: { message: `Pet with ID ${petId} has been deleted` },
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    const { z } = require('zod')
+
+    exports.config = {
+      type: 'api',
+      name: 'DeletePet',
+      description: 'Delete a pet by ID',
+      method: 'DELETE',
+      path: '/pets/:id',
+      
+      responseSchema: {
+        200: z.object({
+          message: z.string(),
+        }),
+        404: z.object({
+          error: z.string(),
+        }),
+      },
+    }
+
+    exports.handler = async (req, { logger }) => {
+      const petId = req.pathParams.id
+      logger.info('Deleting pet', { petId })
+
+      // In a real app, you'd remove from your database
+      const pets = [
+        { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+        { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+      ]
+
+      const petExists = pets.some(p => p.id === petId)
+
+      if (!petExists) {
+        return {
+          status: 404,
+          body: { error: 'Pet not found' },
+        }
+      }
+
+      return {
+        status: 200,
+        body: { message: `Pet with ID ${petId} has been deleted` },
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from pydantic import BaseModel
+
+    class DeleteResponse(BaseModel):
+        message: str
+
+    class ErrorResponse(BaseModel):
+        error: str
+
+    config = {
+        'type': 'api',
+        'name': 'DeletePet',
+        'description': 'Delete a pet by ID',
+        'method': 'DELETE',
+        'path': '/pets/:id',
+        'responseSchema': {
+            '200': DeleteResponse.model_json_schema(),
+            '404': ErrorResponse.model_json_schema()
+        }
+    }
+
+    async def handler(req, context):
+        pet_id = req.get('pathParams', {}).get('id')
+        context.logger.info('Deleting pet', {'petId': pet_id})
+        
+        # In a real app, you'd remove from your database
+        pets = [
+            {'id': '1', 'name': 'Buddy', 'breed': 'Golden Retriever', 'age': 3},
+            {'id': '2', 'name': 'Max', 'breed': 'German Shepherd', 'age': 5},
+        ]
+        
+        pet_exists = any(p['id'] == pet_id for p in pets)
+        
+        if not pet_exists:
+            return {
+                'status': 404,
+                'body': {'error': 'Pet not found'}
+            }
+        
+        return {
+            'status': 200,
+            'body': {'message': f'Pet with ID {pet_id} has been deleted'}
+        }
+    ```
+  </Tab>
+</Tabs>
+
 ![Delete One Pet](./../img/delete-pet.png)
 
 ## Testing the Complete REST API
