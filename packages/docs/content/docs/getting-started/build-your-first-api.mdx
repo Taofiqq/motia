@@ -1,242 +1,357 @@
 ---
-title: Build Your First API in Motia (TypeScript)
-description: Learn how to create, connect, and extend your first API using Motia’s workflow engine in TypeScript. This guide covers key concepts, best practices, and how APIs fit into Motia’s polyglot architecture.
+title: Creating Your First REST API in Motia (TypeScript)
+description: Learn how to build a complete REST API with CRUD operations using Motia and TypeScript. This guide covers HTTP endpoints, request validation, and response handling.
 ---
+REST APIs are one of the fundamental foundations of most modern web architectures, especially for client-server communication. They allow clients to interact with your backend through standard HTTP methods like GET, POST, PUT, and DELETE. In Motia, creating APIs is straightforward, you define endpoints as API Steps with built-in TypeScript validation.
+This guide will walk you through building a complete REST API in Motia using TypeScript. You'll learn how to create HTTP endpoints, validate requests, handle responses, and implement full CRUD operations for a pet store application.
 
-APIs are one of the core concepts of Motia because they define how your backend talks to external applications. In Motia, creating an API is just one kind of Step you can add to your workflow, but it’s a powerful starting point because you can immediately connect it to other Steps, events, and services without extra setup.
+## REST API Concepts You'll Use
 
-This guide will walk you through the concepts behind building your first API in Motia using TypeScript. You’ll learn what an API Step is, how requests are handled inside Motia, and how to connect your API to other parts of your backend.
+Before we start building, let's cover the key concepts for creating REST APIs in Motia:
 
-## Motia Concepts You’ll Use
+- **API Step** – A TypeScript file that defines an HTTP endpoint with validation schemas and request handling logic.
+- **HTTP Methods** – GET (retrieve), POST (create), PUT (update), DELETE (remove) operations on resources.
+- **Request Validation** – Using Zod schemas to validate incoming request bodies, parameters, and query strings.
+- **Response Handling** – Returning proper HTTP status codes and structured JSON responses.
+- **Path Parameters** – Dynamic URL segments like `/pets/:id` to identify specific resources.
 
-Before we go into building your first API, let’s get familiar with the core concepts you’ll work with in Motia:
+## API Step Structure
 
-- **Step** – The building block of all Motia logic. Unlike traditional functions, Steps can be triggered by HTTP requests, events, or schedules.
-- **API Step** – Exposes HTTP endpoints with built-in TypeScript validation and connects directly to your workflow.
-- **Flow** – Groups related Steps together for visual organization and debugging in the Workbench.
-- **State** – Built-in key-value storage that's automatically traced and shared across all Steps.
-- **Event Step** – Handles asynchronous processing triggered by other Steps—no separate queue system needed.
-
-## API Anatomy section
-
-Every API Step in Motia consists of two parts that work together to create a complete HTTP endpoint:
+Every API endpoint in Motia consists of two parts that work together:
 
 | Component | Type | Description |
 |-----------|------|-------------|
-| **`ApiRouteConfig`** | `object` | Configuration object that defines the HTTP endpoint structure, including the path, method, validation schemas, and event connections. This is where you declaratively specify what your API looks like and how it connects to other parts of your workflow. |
-| **`Handlers[StepName]`** | `function` | The handler function that contains your business logic. It receives the HTTP request and Motia's context (logger, emit, state, traceId) and returns an HTTP response. This is where your actual application logic lives. |
+| **`ApiRouteConfig`** | `object` | Configuration object that defines the HTTP endpoint structure, including the path, method, and validation schemas. This is where you specify what your API endpoint looks like and how it validates requests. |
+| **`Handlers[StepName]`** | `function` | The handler function that contains your business logic. It receives the HTTP request and returns an HTTP response with the appropriate status code and data. |
 
-## Creating a Pet Store API Project
+## Building a Pet Store REST API
 
-Now that you understand the core parts of an API Step, let’s put that knowledge into practice by building a real API project.
-In this example, we’ll create a Pet Store API using Motia and TypeScript. This project will start with a single endpoint for creating a pet and then expand to include additional features such as retrieving pet details, listing pets, and emitting events for asynchronous processing.
+Now that you understand the core parts of an API endpoint, let's build a complete REST API for a pet store.
 
-## Project Setup
-Before we write our first API Step, let’s set up a new Motia project. We’ll use the Pet Store API example so you can follow along and run everything locally.
+We'll create a Pet Store API with full CRUD operations:
+- `GET /pet` - List all pets
+- `POST /pets` - Create a new pet
+- `GET /pets/:id` - Get a specific pet by ID
+- `PUT /pets/:id` - Update a pet's information
+- `DELETE /pets/:id` - Remove a pet
 
-### Create a New Project
-Create a new Motia project called pet-store-api using the command below: 
+This covers all the essential REST API patterns you'll use in real applications.
 
-```bash
-npx motia@latest create -i
-```
-During setup:
-- Language → Select TypeScript (this lets us use type safety and Zod validation).
-- Project name → Type pet-store-api (or choose your own).
+If you haven't already, follow the [Quick Start Guide](/docs/getting-started/quick-start) to create a Motia project. This tutorial assumes you have a working project with the development server running.
 
-Once setup completes, navigate into the new directory:
-```bash
-cd pet-store-api 
-```
+## Create Your First API Endpoint
 
-### Run the Development Server Workbench
-```bash 
-npx motia dev
-```
-This should start the development server at:  http://localhost:3000. You should see the Motia Workbench interface showing:
+Let's start by creating a simple endpoint to add new pets to our store.
 
-- Interactive flow visualization
-- Endpoint testing interface
-- Real-time logs and traces
+### Creating the Add Pet API
 
-![Endpoint Visualization](./../img/pet-store-api-view.png)
-![Flow Visualization in Workbench](./../img/pet-store-workbench.png)
+We'll create a `POST /pets` endpoint that accepts pet information and stores it. This endpoint will demonstrate key REST API concepts like request validation and response handling.
 
-## Step 1: Create Your First API Endpoint
-Now that you have the Workbench running, let's create your first API endpoint.By default, a `default` API is created when you initialize a motia project. For our pet store project we will create a new file in the steps folder.
+Create a new file for your first endpoint:
 
-### Creating the Pet Registration API
-
-We'll start by building an API endpoint that allows users to register new pets and optionally place food orders. This endpoint will demonstrate key concepts like request validation, external API integration, and response handling.
-
-Create a new file in your project:
-
-In Motia, every API endpoint is defined as an "API Step." Let's create our first one.
-
-**File:** `steps/01-api.step.ts`
+**File:** `steps/create-pet.step.ts`
 
 ```typescript 
 import { ApiRouteConfig, Handlers } from 'motia'
 import { z } from 'zod'
-import { petStoreService } from '../services/pet-store'
 
 export const config: ApiRouteConfig = {
   type: 'api',
-  name: 'ApiTrigger',
-  description: 'Pet registration API that creates a new pet and optionally processes a food order',
-  
-  /**
-   * The flows this step belongs to, will be available in Workbench
-   */
-  flows: ['pet-registration],
-
+  name: 'CreatePet',
+  description: 'Create a new pet in the store',
   method: 'POST',
-  path: '/pet-registration',
+  path: '/pets',
   
-  /**
-   * Expected request body for type checking and documentation
-   */
   bodySchema: z.object({
-    pet: z.object({
-      name: z.string(),
-      photoUrl: z.string(),
-    }),
-    foodOrder: z
-      .object({
-        id: z.string(),
-        quantity: z.number(),
-      })
-      .optional(),
+    name: z.string(),
+    breed: z.string(),
+    age: z.number(),
   }),
 
-  /**
-   * Expected response body for type checking and documentation
-   */
+  responseSchema: {
+    200: z.object({
+      id: z.string(),
+      name: z.string(),
+      breed: z.string(),
+      age: z.number(),
+    }),
+  },
+}
+
+export const handler: Handlers['CreatePet'] = async (req, { logger }) => {
+  logger.info('Creating new pet', { body: req.body })
+
+  // In a real app, you'd save to a database
+  const newPet = {
+    id: Date.now().toString(),
+    ...req.body,
+  }
+
+  return {
+    status: 200,
+    body: newPet,
+  }
+}
+```
+
+The most fundamental part of any API endpoint is defining what HTTP method it accepts and where it lives:
+
+```typescript
+method: 'POST',
+path: '/pets',
+```
+This configuration tells Motia to create a POST endpoint at /pets. When your development server is running, users can send requests to http://localhost:3000/pets to create new pets. The POST method is the standard HTTP method for creating new resources in REST APIs.
+
+### Request Validation with Zod
+The bodySchema is where we define what data our endpoint expects and how it should be validated:
+```typescript
+bodySchema: z.object({
+  name: z.string(),
+  breed: z.string(),
+  age: z.number(),
+}),
+```
+This schema serves two important purposes. First, it provides compile-time TypeScript types throughout your handler function. When you access `req.body.name`, TypeScript knows it's a string and can provide proper autocomplete and error checking.
+
+![Pet Creation](./../img/pet-creation.png)
+
+##  Adding More CRUD Operations
+
+Now that we have a working POST endpoint, let's build out the complete REST API with all CRUD operations. We'll add endpoints to retrieve, update, and delete pets.
+
+### Get All Pets - `GET /pets`
+
+Create a new file to list all pets in the store:
+
+**File:** `steps/get-pets.step.ts`
+
+```typescript
+import { ApiRouteConfig, Handlers } from "motia";
+import { z } from "zod";
+
+export const config: ApiRouteConfig = {
+  type: "api",
+  name: "GetPets",
+  description: "Get all pets in the store",
+  method: "GET",
+  path: "/pets",
+  responseSchema: {
+    200: z.object({
+      pets: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        })
+      ),
+    }),
+  },
+  emits: ["process-food-order"],
+};
+
+export const handler: Handlers["GetPets"] = async (req: any, { logger }) => {
+  logger.info("Retrieving all pets");
+
+  // In a real app, you'd fetch from a database
+  const pets = [
+    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+    { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+  ];
+
+  return {
+    status: 200,
+    body: { pets },
+  };
+};
+```
+![Get All Pets](./../img/get-all-pets.png)
+
+### Get Pet by ID - `GET /pets/:id`
+
+Create a new file to retrieve a specific pet:
+
+**File:** `steps/get-pet-by-id.step.ts`
+
+```typescript
+import { ApiRouteConfig, Handlers } from 'motia'
+import { z } from 'zod'
+
+export const config: ApiRouteConfig = {
+  type: 'api',
+  name: 'GetPetById',
+  description: 'Get a specific pet by ID',
+  method: 'GET',
+  path: '/pets/:id',
+  
+  responseSchema: {
+    200: z.object({
+      id: z.string(),
+      name: z.string(),
+      breed: z.string(),
+      age: z.number(),
+    }),
+    404: z.object({
+      error: z.string(),
+    }),
+  },
+}
+
+export const handler: Handlers['GetPetById'] = async (req, { logger }) => {
+  const petId = req.pathParams.id
+  logger.info('Retrieving pet by ID', { petId })
+
+  // In a real app, you'd search your database
+  const pets = [
+    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+    { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+  ]
+
+  const pet = pets.find(p => p.id === petId)
+
+  if (!pet) {
+    return {
+      status: 404,
+      body: { error: 'Pet not found' },
+    }
+  }
+
+  return {
+    status: 200,
+    body: pet,
+  }
+}
+```
+![Get One Pet](./../img/get-one-pet.png)
+
+### Update Pet - `PUT /pets/:id`
+
+Create a new file to update existing pets:
+
+**File:** `steps/update-pet.step.ts`
+
+```typescript
+import { ApiRouteConfig, Handlers } from 'motia'
+import { z } from 'zod'
+
+export const config: ApiRouteConfig = {
+  type: 'api',
+  name: 'UpdatePet',
+  description: 'Update a pet by ID',
+  method: 'PUT',
+  path: '/pets/:id',
+  
+  bodySchema: z.object({
+    name: z.string(),
+    breed: z.string(),
+    age: z.number(),
+  }),
+
+  responseSchema: {
+    200: z.object({
+      id: z.string(),
+      name: z.string(),
+      breed: z.string(),
+      age: z.number(),
+    }),
+    404: z.object({
+      error: z.string(),
+    }),
+  },
+}
+
+export const handler: Handlers['UpdatePet'] = async (req, { logger }) => {
+  const petId = req.pathParams.id
+  logger.info('Updating pet', { petId, body: req.body })
+
+  // In a real app, you'd update your database
+  const pets = [
+    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+    { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+  ]
+
+  const petIndex = pets.findIndex(p => p.id === petId)
+
+  if (petIndex === -1) {
+    return {
+      status: 404,
+      body: { error: 'Pet not found' },
+    }
+  }
+
+  const updatedPet = {
+    id: petId,
+    ...req.body,
+  }
+
+  return {
+    status: 200,
+    body: updatedPet,
+  }
+}
+```
+
+### Delete Pet - `DELETE /pets/:id`
+
+Create a new file to remove pets from the store:
+
+**File:** `steps/delete-pet.step.ts`
+
+```typescript
+import { ApiRouteConfig, Handlers } from 'motia'
+import { z } from 'zod'
+
+export const config: ApiRouteConfig = {
+  type: 'api',
+  name: 'DeletePet',
+  description: 'Delete a pet by ID',
+  method: 'DELETE',
+  path: '/pets/:id',
+  
   responseSchema: {
     200: z.object({
       message: z.string(),
-      traceId: z.string(),
+    }),
+    404: z.object({
+      error: z.string(),
     }),
   },
-
-  /**
-   * This API Step emits events to topic `process-food-order`
-   */
-  emits: ['process-food-order'],
-
-  /**
-   * We're using virtual subscribes to virtually connect noop step
-   * to this step.
-   *
-   * Noop step is defined in noop.step.ts
-   */
-  virtualSubscribes: ['/pet-registration'],
 }
 
-export const handler: Handlers['ApiTrigger'] = async (req, { logger, emit, traceId }) => {
-  /**
-   * Avoid usage of console.log, use logger instead
-   */
-  logger.info('Step 01 – Processing API Step', { body: req.body })
+export const handler: Handlers['DeletePet'] = async (req, { logger }) => {
+  const petId = req.pathParams.id
+  logger.info('Deleting pet', { petId })
 
-  const { pet, foodOrder } = req.body
+  // In a real app, you'd remove from your database
+  const pets = [
+    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+    { id: "2", name: "Max", breed: "German Shepherd", age: 5 },
+  ]
 
-  const newPetRecord = await petStoreService.createPet(pet)
+  const petExists = pets.some(p => p.id === petId)
 
-  /**
-   * Emit events to the topics to process asynchronously
-   */
-  if (foodOrder) {
-    await emit({
-      topic: 'process-food-order',
-      data: {
-        ...foodOrder,
-        petId: newPetRecord.id,
-      },
-    })
+  if (!petExists) {
+    return {
+      status: 404,
+      body: { error: 'Pet not found' },
+    }
   }
 
-  /**
-   * Return data back to the client
-   */
   return {
     status: 200,
-    body: {
-      traceId,
-      message: 'Your pet has been registered and your order is being processed',
-    },
+    body: { message: `Pet with ID ${petId} has been deleted` },
   }
 }
 ```
+![Delete One Pet](./../img/delete-pet.png)
 
-Now let's break down the important parts of this API Step and understand how each part works.
+## Testing the Complete REST API
+You now have a full CRUD REST API. Here are all the endpoints you can test:
 
-#### The Configuration Object
-The `config` object tells Motia everything it needs to know about your API endpoint:
+- `POST /pets` - Create a new pet
+- `GET /pets` - List all pets
+- `GET /pets/:id` - Get a specific pet
+- `PUT /pets/:id` - Update a pet
+- `DELETE /pets/:id` - Delete a pet
 
-```typescript
-export const config: ApiRouteConfig = {
-  type: 'api',
-  name: 'ApiTrigger',
-  method: 'POST',
-  path: '/pet-registration',
-  // ...
-}
-```
-The type: 'api' field identifies this as an API Step, not an event or cron step. Motia uses this to know that it should create an HTTP endpoint. The name field is important because it connects your configuration to your handler function. See how the handler uses Handlers['ApiTrigger'].
-The method and path work together to define your endpoint. This creates a POST endpoint at /pet-registration, so clients will send requests to http://localhost:3000/pet-registration.
-
-#### Request Validation with Zod
-The bodySchema is where TypeScript and runtime validation happen:
-
-```typescript
-bodySchema: z.object({
-  pet: z.object({
-    name: z.string(),
-    photoUrl: z.string(),
-  }),
-  foodOrder: z.object({
-    id: z.string(),
-    quantity: z.number(),
-  }).optional(),
-})
-```
-This schema does two things. First, it provides TypeScript types for your handler function, when you access req.body.pet.name, TypeScript knows it's a string. Second, it validates incoming requests at runtime. If someone sends invalid data, Motia automatically returns a 400 error before your handler even runs.
-The .optional() on foodOrder means clients can include it or leave it out. This flexibility is common in real APIs where some data is required and some is optional.
-
-#### The Handler Function
-The handler is where your business logic lives:
-```typescript 
-export const handler: Handlers['ApiTrigger'] = async (req, { logger, emit, traceId }) => {
-  const { pet, foodOrder } = req.body
-  // ...
-}
-```
-Notice how the handler receives two parameters. The first is req, which contains your validated request data. The second is a context object with Motia utilities like logger for structured logging and emit for triggering other parts of your workflow.
-The destructuring of req.body is safe here because Zod already validated that pet exists and has the right structure. TypeScript knows the exact shape of this data.
-
-#### External API Integration
-This line shows how to integrate with external services:
-
-```typescript 
-const newPetRecord = await petStoreService.createPet(pet)
-```
-
-The petStoreService is a separate module that handles the HTTP call to the external Petstore API. This separation keeps your API Step focused on handling the request and response, while the service handles the details of external communication.
-
-### Response Structure
-Every handler must return a response object:
-```typescript 
-return {
-  status: 200,
-  body: {
-    traceId,
-    message: 'Your pet has been registered and your order is being processed',
-  },
-}
-```
-Reload your development server you should see an endpoint `pet-registration` added and you can make a post request to register a pet.
-
-![Pet Registration API Workflow](./../img/pet-registration.gif)
-
-### Adding More APIs - section to add more API endpoints like get pets by id, get users by id etc once the above has been validated
+You can test each endpoint using the Workbench interface or with curl commands. This covers all the essential patterns you'll need for building REST APIs.
