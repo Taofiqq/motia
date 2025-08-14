@@ -142,6 +142,7 @@ Create a new file for your first endpoint:
   <Tab value="Python">
     ```python
     from pydantic import BaseModel
+    import time
 
     class PetRequest(BaseModel):
         name: str
@@ -170,7 +171,6 @@ Create a new file for your first endpoint:
         context.logger.info('Creating new pet', {'body': req.get('body')})
         
         # In a real app, you will save to a database
-        import time
         new_pet = {
             'id': str(int(time.time() * 1000)),
             **req.get('body')
