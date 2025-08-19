@@ -1,17 +1,18 @@
 ---
-title: Creating Your First REST API in Motia (TypeScript)
-description: Learn how to build a complete REST API with CRUD operations using Motia and TypeScript. This guide covers HTTP endpoints, request validation, and response handling.
+title: Creating Your First REST API in Motia
+description: Learn how to build a complete REST API with CRUD operations using Motia. This guide covers HTTP endpoints, request validation, and response handling.
 ---
-REST APIs are one of the fundamental foundations of most modern web architectures, especially for client-server communication. They allow clients to interact with your backend through standard HTTP methods like GET, POST, PUT, and DELETE. In Motia, creating APIs is straightforward, you define endpoints as API Steps with built-in TypeScript validation.
-This guide will walk you through building a complete REST API in Motia using TypeScript. You'll learn how to create HTTP endpoints, validate requests, handle responses, and implement full CRUD operations for a pet store application.
+If you haven't already, follow the [Quick Start Guide](/docs/getting-started/quick-start) to create a Motia project. This tutorial assumes you have a working project with the development server running.
+
+REST APIs are one of the fundamental foundations of most modern web architectures, especially for client-server communication. They allow clients to interact with your backend through standard HTTP methods like GET, POST, PUT, and DELETE. In Motia, creating APIs is straightforward, you define endpoints as API Steps.
+This guide will walk you through building a complete REST API in Motia. You'll learn how to create HTTP endpoints, validate requests, handle responses, and implement full CRUD operations for a pet store application.
 
 ## REST API Concepts You'll Use
 
 Before we start building, let's cover the key concepts for creating REST APIs in Motia:
 
-- **API Step** – A TypeScript file that defines an HTTP endpoint with validation schemas and request handling logic.
+- **API Step** – A file that defines an HTTP endpoint with validation schemas and request handling logic.
 - **HTTP Methods** – GET (retrieve), POST (create), PUT (update), DELETE (remove) operations on resources.
-- **Request Validation** – Using Zod schemas to validate incoming request bodies, parameters, and query strings.
 - **Response Handling** – Returning proper HTTP status codes and structured JSON responses.
 - **Path Parameters** – Dynamic URL segments like `/pets/:id` to identify specific resources.
 
@@ -36,8 +37,6 @@ We'll create a Pet Store API with full CRUD operations:
 - `DELETE /pets/:id` - Remove a pet
 
 This covers all the essential REST API patterns you'll use in real applications.
-
-If you haven't already, follow the [Quick Start Guide](/docs/getting-started/quick-start) to create a Motia project. This tutorial assumes you have a working project with the development server running.
 
 ## Create Your First API Endpoint
 
@@ -191,17 +190,6 @@ method: 'POST',
 path: '/pets',
 ```
 This configuration tells Motia to create a POST endpoint at /pets. When your development server is running, users can send requests to http://localhost:3000/pets to create new pets. The POST method is the standard HTTP method for creating new resources in REST APIs.
-
-### Request Validation with Zod
-The bodySchema is where we define what data our endpoint expects and how it should be validated:
-```typescript
-bodySchema: z.object({
-  name: z.string(),
-  breed: z.string(),
-  age: z.number(),
-}),
-```
-This schema serves two important purposes. First, it provides compile-time TypeScript types throughout your handler function. When you access `req.body.name`, TypeScript knows it's a string and can provide proper autocomplete and error checking.
 
 ![Pet Creation](./../img/pet-creation.png)
 
