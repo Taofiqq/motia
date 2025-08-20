@@ -1,39 +1,5 @@
 [
   {
-    "id": "cron-example",
-    "config": {
-      "steps/cronExample/handlePeriodicJob.step.ts": {
-        "x": 0,
-        "y": 0
-      }
-    }
-  },
-  {
-    "id": "open-ai",
-    "config": {
-      "steps/open-ai-python/02-prompt.step.py": {
-        "x": 24,
-        "y": 232,
-        "targetHandlePosition": "left"
-      },
-      "steps/open-ai-python/01-prompt-api.step.py": {
-        "x": -338,
-        "y": 206,
-        "sourceHandlePosition": "right"
-      },
-      "steps/open-ai/02-prompt.step.ts": {
-        "x": 49,
-        "y": 70,
-        "targetHandlePosition": "left"
-      },
-      "steps/open-ai/01-prompt-api.step.ts": {
-        "x": -315,
-        "y": 44,
-        "sourceHandlePosition": "right"
-      }
-    }
-  },
-  {
     "id": "simple-python",
     "config": {
       "steps/simplePython/testedEvent.step.py": {
@@ -108,26 +74,82 @@
     "id": "default",
     "config": {
       "steps/default-node/03-check-state-change.step.ts": {
-        "x": 540,
-        "y": 305,
-        "targetHandlePosition": "left"
+        "x": 18,
+        "y": 688
       },
       "steps/default-node/02-test-state.step.ts": {
-        "x": 211,
-        "y": 306,
-        "sourceHandlePosition": "right",
-        "targetHandlePosition": "left"
+        "x": 0,
+        "y": 492
       },
       "steps/default-node/01-api.step.ts": {
-        "x": -116,
-        "y": 271,
+        "x": 17,
+        "y": 228
+      },
+      "steps/default-node/00-noop.step.ts": {
+        "x": 56,
+        "y": 0
+      }
+    }
+  },
+  {
+    "id": "open-ai",
+    "config": {
+      "steps/open-ai/02-prompt.step.ts": {
+        "x": 49,
+        "y": 70,
+        "targetHandlePosition": "left"
+      },
+      "steps/open-ai/01-prompt-api.step.ts": {
+        "x": -315,
+        "y": 44,
+        "sourceHandlePosition": "right"
+      },
+      "steps/open_ai_python/prompt_step.py": {
+        "x": 312,
+        "y": 264
+      },
+      "steps/open_ai_python/prompt_api_step.py": {
+        "x": 311,
+        "y": 0
+      }
+    }
+  },
+  {
+    "id": "cron-example",
+    "config": {
+      "steps/cronExample/periodicJobHandled.step.ts": {
+        "x": 0,
+        "y": 260
+      },
+      "steps/cronExample/handlePeriodicJob.step.ts": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "id": "basic-tutorial",
+    "config": {
+      "steps/basic-tutorial/04_new_order_notifications.step.py": {
+        "x": 668,
+        "y": 266,
+        "targetHandlePosition": "left"
+      },
+      "steps/basic-tutorial/03-state-audit-cron.step.ts": {
+        "x": 224,
+        "y": 520
+      },
+      "steps/basic-tutorial/02-process-food-order.step.ts": {
+        "x": 220,
+        "y": 242,
         "sourceHandlePosition": "right",
         "targetHandlePosition": "left"
       },
-      "steps/default-node/00-noop.step.ts": {
-        "x": -322,
-        "y": 291,
-        "sourceHandlePosition": "right"
+      "steps/basic-tutorial/01-api.step.ts": {
+        "x": -243,
+        "y": 199,
+        "sourceHandlePosition": "right",
+        "targetHandlePosition": "left"
       }
     }
   }

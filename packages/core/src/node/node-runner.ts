@@ -1,9 +1,9 @@
 import path from 'path'
+import { StateStreamEvent, StateStreamEventChannel, StreamConfig } from '../types-stream'
 import { Logger } from './logger'
 import { composeMiddleware } from './middleware-compose'
 import { RpcSender } from './rpc'
 import { RpcStateManager } from './rpc-state-manager'
-import { StreamConfig } from '../types-stream'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('dotenv').config()
@@ -50,6 +50,8 @@ async function runTypescriptModule(filePath: string, event: Record<string, unkno
             sender.send(`streams.${streams.name}.set`, { groupId, id, data }),
           delete: (groupId: string, id: string) => sender.send(`streams.${streams.name}.delete`, { groupId, id }),
           getGroup: (groupId: string) => sender.send(`streams.${streams.name}.getGroup`, { groupId }),
+          send: (channel: StateStreamEventChannel, event: StateStreamEvent<unknown>) =>
+            sender.send(`streams.${streams.name}.send`, { channel, event }),
         }
         return acc
       },

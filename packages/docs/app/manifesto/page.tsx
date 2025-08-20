@@ -32,7 +32,7 @@ export default function ManifestoPage() {
               Modern software engineering is splintered. APIs live in one framework, background jobs in another, queues
               have their own tooling, and complex workflows require separate orchestration engines. <span
                 className={gradientText}>Motia</span> exists to <span className={gradientText}>unify</span>{' '}
-              all of these concerns viz. <span className={gradientText}>API endpoints, scheduled tasks, background
+              all of these concerns, <span className={gradientText}>API endpoints, scheduled tasks, background
               jobs, message queues, and workflow orchestration into a single, coherent system with shared observability and developer
               experience.</span>
             </p>

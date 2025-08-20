@@ -1,7 +1,7 @@
 import asyncio
 import functools
 import sys
-from typing import Any
+from typing import Any, Dict
 from motia_rpc import RpcSender
 
 class RpcStreamManager:
@@ -23,6 +23,9 @@ class RpcStreamManager:
 
     async def getGroup(self, group_id: str) -> asyncio.Future[None]:
         return await self.rpc.send(f'streams.{self.stream_name}.getGroup', {'groupId': group_id})
+    
+    async def send(self, channel: Dict, event: Dict) -> asyncio.Future[None]:
+        return await self.rpc.send(f'streams.{self.stream_name}.send', {'channel': channel, 'event': event})
 
     # Add wrappers to handle non-awaited coroutines
     def __getattribute__(self, name):

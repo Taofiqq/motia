@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   openGraph: {
     images: [
       {
-        url: '/og-image-updated.jpg',
+        url: '/og-image-updated-new.jpg',
         width: 1200,
         height: 630,
         alt: 'Motia - Unified Backend Framework for APIs, Events and AI Agents',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     ],
   },
   twitter: {
-    images: ['/og-image-updated.jpg'],
+    images: ['/og-image-updated-new.jpg'],
   },
 };
 

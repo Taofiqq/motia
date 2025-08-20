@@ -55,19 +55,21 @@ This command:
 Deploy your built steps to the Motia deployment service.
 
 ```bash
-npx motia deploy [options]
+motia cloud deploy --api-key <api-key> --version-name <version> [options]
 ```
 
 Options:
 
 - `-k, --api-key <key>` (required): Your API key for authentication
-- `-e, --env <environment>`: The environment to deploy to (default: `dev`)
-- `-v, --version <version>`: The version to deploy (default: `latest`)
+- `-v, --version-name <version>` (required): The version to deploy
+- `-s, --environment-id <environment>`: The environment ID to deploy to
+- `-e, --env-file <file>`: Path to environment file
+- `-n, --project-name <name>`: Project name (used when environment-id is not provided)
 
 Example:
 
 ```bash
-npx motia deploy --api-key your-api-key-here --env production --version 1.0.0
+motia cloud deploy --api-key your-api-key-here --version-name 1.2.3 --environment-id env-uuid
 ```
 
 The deployment process:

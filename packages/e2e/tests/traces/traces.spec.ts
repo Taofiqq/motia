@@ -1,6 +1,12 @@
 import { expect, test } from '../fixtures/motia-fixtures'
 
 test.describe('Traces tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('motia-tutorial-skipped', 'true')
+    })
+  })
+
   test('should execute default flow and see it in traces', async ({ workbench, tracesPage, api }) => {
     let traceId: string
 

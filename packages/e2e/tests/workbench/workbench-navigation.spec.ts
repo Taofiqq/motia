@@ -10,6 +10,10 @@ test.describe('CLI Generated Project - Workbench Navigation', () => {
   test.beforeEach(async ({ page }) => {
     workbench = new WorkbenchPage(page)
     logsPage = new LogsPage(page)
+
+    await page.addInitScript(() => {
+      localStorage.setItem('motia-tutorial-skipped', 'true')
+    })
   })
 
   test('should load workbench page of CLI generated project', async () => {
@@ -28,7 +32,7 @@ test.describe('CLI Generated Project - Workbench Navigation', () => {
   test('should show created steps in the workbench', async () => {
     await workbench.open()
 
-    const expectedSteps = ['api-trigger', 'process-data', 'send-notification']
+    const expectedSteps = ['api-trigger', 'process-data', 'send-notification', 'basic-tutorial']
     await workbench.verifyStepsInWorkbench(expectedSteps)
   })
 

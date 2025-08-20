@@ -10,6 +10,10 @@ test.describe('Flow Execution Tests', () => {
     workbench = new WorkbenchPage(page)
     logsPage = new LogsPage(page)
     api = new ApiHelpers(page)
+
+    await page.addInitScript(() => {
+      localStorage.setItem('motia-tutorial-skipped', 'true')
+    })
   })
 
   test('should execute a complete flow end-to-end', async ({ page }) => {

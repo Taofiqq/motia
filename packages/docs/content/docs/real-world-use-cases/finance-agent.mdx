@@ -84,7 +84,7 @@ import { CodeFetcher } from '../../../components/CodeFetcher'
 
 The workflow consists of several specialized steps that work together to provide comprehensive financial analysis:
 
-![Finance Agent](../img/finance-agent.png)
+![Finance Agent](../img/finance-agent.gif)
 
 
 ## 🚦 API Endpoints

@@ -4,7 +4,7 @@ import bgFooter from '@/public/images/landing/bgFooter.svg'
 import footerBlueGlow from '@/public/images/landing/footerBlueGlow.svg'
 import footerWordmark from '@/public/images/landing/footerWordmark.svg'
 import footerWordmarkGlow from '@/public/images/landing/footerWordmarkGlow.svg'
-import { discordIcon, githubIcon, starIcon, twitterIcon } from './Icons'
+import { discordIcon, githubIcon, starIcon, twitterIcon, linkedinIcon, youtubeIcon } from './Icons'
 import React from 'react'
 import Link from 'next/link'
 
@@ -16,7 +16,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import { scrollToId } from '@/utils'
 
 const SocialLinks: React.FC = () => {
-  const stars = useGithubStars()
+  const { starCount, isLoading } = useGithubStars()
   return (
     <div className="flex w-full flex-col gap-[26px]">
       <p className="gradient-text-white font-tasa text-[28px] font-semibold">Join our community</p>
@@ -44,7 +44,14 @@ const SocialLinks: React.FC = () => {
         >
           {githubIcon} <p>Contribute on Github </p> <p className="max-sm:hidden">|</p>
           <div className="flex items-center gap-[6px] text-white max-sm:hidden">
-            {starIcon} <p>{stars}</p>
+            {starIcon} 
+            <p>
+              {isLoading ? (
+                <span className="inline-block animate-pulse">----</span>
+              ) : (
+                starCount || '----'
+              )}
+            </p>
           </div>
         </Link>
 
@@ -60,6 +67,29 @@ const SocialLinks: React.FC = () => {
           {twitterIcon} <p>Follow us on Twitter</p>
         </Link>
       </div>
+      {/* <div className="mt-4">
+        <a
+          href="https://vercel.com/oss?utm_source=motia&utm_campaign=oss"
+          target="_blank"
+          rel="noreferrer"
+          className="flex items-center gap-2 text-sm text-gray-400"
+        >
+          <svg
+            aria-label="Vercel logomark"
+            height="15"
+            role="img"
+            viewBox="0 0 74 64"
+            className="fill-current"
+          >
+            <path
+              d="M37.5896 0.25L74.5396 64.25H0.639648L37.5896 0.25Z"
+              fill="white"
+            ></path>
+          </svg>
+          <span>Vercel Inc. // 2025</span>
+          <span>Open Source Software Program</span>
+        </a>
+      </div> */}
     </div>
   )
 }
@@ -163,7 +193,44 @@ export default function Footer() {
         <div className="relative z-3 flex h-full w-[1200px] max-w-full flex-col justify-between">
           <div className="flex h-full w-full gap-[26px] max-lg:flex-col max-lg:justify-center">
             <SocialLinks />
-            <HomePageLinks />
+            <div className="flex w-[400px] flex-col max-lg:w-full lg:shrink-0">
+              {/* Social Media Icons Row */}
+              <div className="flex items-center justify-end gap-[12px] mb-[24px] max-lg:justify-start">
+                <Link
+                  href={LINKEDIN_HANDLE}
+                  target="_blank"
+                  className="text-white/60 transition-colors ease-in-out hover:text-white"
+                  aria-label="Follow us on LinkedIn"
+                >
+                  {linkedinIcon}
+                </Link>
+                <Link
+                  href={TWITTER_HANDLE}
+                  target="_blank"
+                  className="text-white/60 transition-colors ease-in-out hover:text-white"
+                  aria-label="Follow us on X (Twitter)"
+                >
+                  {twitterIcon}
+                </Link>
+                <Link
+                  href={DISCORD_HANDLE}
+                  target="_blank"
+                  className="text-white/60 transition-colors ease-in-out hover:text-white"
+                  aria-label="Join our Discord"
+                >
+                  {discordIcon}
+                </Link>
+                <Link
+                  href={YOUTUBE_HANDLE}
+                  target="_blank"
+                  className="text-white/60 transition-colors ease-in-out hover:text-white"
+                  aria-label="Subscribe to our YouTube channel"
+                >
+                  {youtubeIcon}
+                </Link>
+              </div>
+              <HomePageLinks />
+            </div>
           </div>
           {/**
            *

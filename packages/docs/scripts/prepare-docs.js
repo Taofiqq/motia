@@ -108,21 +108,21 @@ Now follow these instructions:
 
     for (const file of mdFiles) {
       const relativePath = path.relative(contentDir, file)
-      const url = `/llm-docs/${relativePath.replace(/\.mdx?$/, '')}`
+      const url = '/docs/' + relativePath.replace(/\.mdx?$/, '').replace(/\/?index$/,'')
 
       // Extract title from frontmatter (assuming it's at the beginning)
       const content = await getContentFromMdx(file)
       const titleMatch = content.match(/^---\ntitle:\s*(.*?)\n---/m)
       const title = titleMatch ? titleMatch[1] : path.basename(file, path.extname(file))
 
-      llmsTxtContent += `-   [${title}](${url}.md): Documentation for ${title}.\n${content}\n\n` // Append the actual MDX content here
+      llmsTxtContent += `-   [${title}](${url}): Documentation for ${title}.\n${content}\n\n` // Append the actual MDX content here
 
       if (relativePath.startsWith('real-world-use-cases')) {
-        llmsTxtContent += `\n## Use Cases\n[${title}](${url}.md): Real world use case\n${content}\n\n`
+        llmsTxtContent += `\n## Use Cases\n[${title}](${url}): Real world use case\n${content}\n\n`
       }
 
       if (relativePath.startsWith('examples')) {
-        llmsTxtContent += `\n## Examples\n[${title}](${url}.md): Code example\n${content}\n\n`
+        llmsTxtContent += `\n## Examples\n[${title}](${url}): Code example\n${content}\n\n`
       }
     }
 

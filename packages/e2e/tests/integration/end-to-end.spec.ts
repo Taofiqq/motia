@@ -1,6 +1,12 @@
 import { test, expect } from '../fixtures/motia-fixtures'
 
 test.describe('End-to-End Integration Tests', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('motia-tutorial-skipped', 'true')
+    })
+  })
+
   test('complete user journey from API to logs', async ({ motiaApp, workbench, logsPage, api }) => {
     await test.step('Verify application is healthy', async () => {
       await workbench.open()

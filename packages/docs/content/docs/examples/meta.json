@@ -2,6 +2,8 @@
   "title": "Examples",
   "defaultOpen": true,
   "pages": [
-    "sentiment-analysis"
+    "sentiment-analysis",
+    "rag-docling-weaviate",
+    "uptime-discord-monitor"
   ]
 }

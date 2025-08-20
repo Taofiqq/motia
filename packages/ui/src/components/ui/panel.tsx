@@ -157,6 +157,7 @@ export const Panel: FC<PanelProps> = ({
                       className={cn(action.active && 'bg-muted-foreground/20 hover:bg-muted-foreground/30')}
                       size="icon"
                       aria-label={action.label}
+                      data-testid="close-panel"
                     >
                       {action.icon}
                     </Button>
