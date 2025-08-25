@@ -1,0 +1,1500 @@
+---
+title: Build Your First Workflow in Motia
+description: Learn how to create multi-step workflows using Motia's event-driven architecture. This guide covers building a complete pet adoption process with conditional logic, state management, and status tracking.
+---
+
+In your previous tutorials, you built a pet store REST API and added background jobs for pet care. Now you have pets in your store and automated care systems running. But how do customers actually adopt these pets? Real pet stores don't just hand over pets immediately - they need a thorough adoption process to ensure pets go to good homes.
+
+In this tutorial, you'll build a multi-step adoption workflow that processes applications over time. Instead of instant pet creation, you'll create a system where customers apply to adopt pets, go through background checks, complete home visits, and receive final approval decisions. This teaches you how to orchestrate complex business processes using Motia's event-driven workflow architecture.
+
+## Workflow Concepts You'll Use
+
+Before we start building, let's cover the key concepts for creating multi-step workflows in Motia:
+
+- **Event-Driven Workflows** – Connected event steps that communicate by emitting and subscribing to events, creating a flow of business logic across multiple stages.
+- **State Management** – Using Motia's built-in state system to track application status, store decisions, and maintain data persistence across workflow steps.
+- **Conditional Logic** – Steps that emit different events based on business rules, creating branching paths like approval/rejection decisions.
+- **Flow Visualization** – Grouping related steps with flow names to see the entire adoption process visualized in the Workbench.
+- **Status Tracking** – Maintaining application progress through each workflow stage, from submission to final decision.
+- **Multi-Step Orchestration** – Coordinating complex business processes that take time and involve multiple decision points.
+
+## Adoption Workflow Architecture
+
+Your pet adoption system will use five connected event steps that work together to process applications:
+
+| Step | Trigger | Purpose | Emits |
+|------|---------|---------|-------|
+| **Application Submission** | API call | Receive and validate adoption application | `application-submitted` |
+| **Background Check** | `application-submitted` | Verify applicant information and history | `background-check-passed` or `background-check-failed` |
+| **Home Visit Scheduling** | `background-check-passed` | Schedule and conduct home environment assessment | `home-visit-completed` |
+| **Approval Decision** | `home-visit-completed` | Make final adoption decision based on all checks | `application-approved` or `application-rejected` |
+| **Pet Assignment** | `application-approved` | Assign pet to approved applicant and update records | `pet-assigned` |
+
+### The Workflow Flow
+
+When someone applies to adopt a pet:
+
+1. **API receives application** → Stores application data in state → Emits `application-submitted`
+2. **Background check runs** → Updates application status → Emits pass/fail event
+3. **If passed:** Home visit gets scheduled → Updates status → Emits completion event
+4. **If home visit passes:** Final approval decision → Emits approved/rejected event  
+5. **If approved:** Pet gets assigned to applicant → Process complete
+
+### State Management
+
+Throughout this process, application data is stored and updated in Motia's state system:
+- Application details (applicant info, pet requested)
+- Status tracking (submitted → background check → home visit → decision)
+- Decision results (pass/fail reasons, approval status)
+- Pet assignment information
+
+This architecture ensures that complex adoption processes are handled reliably with full traceability and status tracking.
+
+## Step 1: Create the Adoption Application Endpoint
+
+First, let's create an API endpoint that customers can use to apply for pet adoption. This will be the entry point into our workflow.
+
+Create a new file for the adoption application API:
+
+**File:** `steps/adoption-application-api.step.ts`
+
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+    import { ApiRouteConfig, Handlers } from 'motia'
+    import { z } from 'zod'
+
+    export const config: ApiRouteConfig = {
+      type: 'api',
+      name: 'AdoptionApplicationAPI',
+      description: 'Submit an adoption application for a pet',
+      method: 'POST',
+      path: '/adoption-applications',
+      
+      bodySchema: z.object({
+        petId: z.string(),
+        applicant: z.object({
+          firstName: z.string(),
+          lastName: z.string(),
+          email: z.string().email(),
+          phone: z.string(),
+          address: z.string(),
+          hasExperience: z.boolean(),
+          livingSituation: z.enum(['house', 'apartment', 'condo']),
+        }),
+      }),
+
+      responseSchema: {
+        200: z.object({
+          applicationId: z.string(),
+          status: z.string(),
+          message: z.string(),
+        }),
+      },
+
+      // This API emits events to start the workflow
+      emits: ['application-submitted'],
+      flows: ['adoption-process'],
+    }
+
+    export const handler: Handlers['AdoptionApplicationAPI'] = async (req, { logger, emit, state, traceId }) => {
+      logger.info('Processing adoption application', { body: req.body })
+
+      const { petId, applicant } = req.body
+
+      // Create application record
+      const application = {
+        id: `app-${Date.now()}`,
+        traceId,
+        petId,
+        applicant,
+        status: 'submitted',
+        submittedAt: new Date().toISOString(),
+        backgroundCheckStatus: 'pending',
+        homeVisitStatus: 'pending',
+        finalDecision: 'pending',
+      }
+
+      // Store application in state
+      await state.set('applications', application.id, application)
+
+      // Emit event to start the background check process
+      await emit({
+        topic: 'application-submitted',
+        data: {
+          applicationId: application.id,
+          petId,
+          applicant,
+        },
+      })
+
+      logger.info('Adoption application submitted successfully', {
+        applicationId: application.id,
+        petId,
+        applicantEmail: applicant.email,
+      })
+
+      return {
+        status: 200,
+        body: {
+          applicationId: application.id,
+          status: 'submitted',
+          message: 'Your adoption application has been submitted and is being processed.',
+        },
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    const { z } = require('zod')
+
+    exports.config = {
+      type: 'api',
+      name: 'AdoptionApplicationAPI',
+      description: 'Submit an adoption application for a pet',
+      method: 'POST',
+      path: '/adoption-applications',
+      
+      bodySchema: z.object({
+        petId: z.string(),
+        applicant: z.object({
+          firstName: z.string(),
+          lastName: z.string(),
+          email: z.string().email(),
+          phone: z.string(),
+          address: z.string(),
+          hasExperience: z.boolean(),
+          livingSituation: z.enum(['house', 'apartment', 'condo']),
+        }),
+      }),
+
+      responseSchema: {
+        200: z.object({
+          applicationId: z.string(),
+          status: z.string(),
+          message: z.string(),
+        }),
+      },
+
+      emits: ['application-submitted'],
+      flows: ['adoption-process'],
+    }
+
+    exports.handler = async (req, { logger, emit, state, traceId }) => {
+      logger.info('Processing adoption application', { body: req.body })
+
+      const { petId, applicant } = req.body
+
+      const application = {
+        id: `app-${Date.now()}`,
+        traceId,
+        petId,
+        applicant,
+        status: 'submitted',
+        submittedAt: new Date().toISOString(),
+        backgroundCheckStatus: 'pending',
+        homeVisitStatus: 'pending',
+        finalDecision: 'pending',
+      }
+
+      await state.set('applications', application.id, application)
+
+      await emit({
+        topic: 'application-submitted',
+        data: {
+          applicationId: application.id,
+          petId,
+          applicant,
+        },
+      })
+
+      logger.info('Adoption application submitted successfully', {
+        applicationId: application.id,
+        petId,
+        applicantEmail: applicant.email,
+      })
+
+      return {
+        status: 200,
+        body: {
+          applicationId: application.id,
+          status: 'submitted',
+          message: 'Your adoption application has been submitted and is being processed.',
+        },
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from pydantic import BaseModel, EmailStr
+    from enum import Enum
+    import time
+
+    class LivingSituation(str, Enum):
+        house = "house"
+        apartment = "apartment"
+        condo = "condo"
+
+    class Applicant(BaseModel):
+        firstName: str
+        lastName: str
+        email: EmailStr
+        phone: str
+        address: str
+        hasExperience: bool
+        livingSituation: LivingSituation
+
+    class ApplicationRequest(BaseModel):
+        petId: str
+        applicant: Applicant
+
+    class ApplicationResponse(BaseModel):
+        applicationId: str
+        status: str
+        message: str
+
+    config = {
+        'type': 'api',
+        'name': 'AdoptionApplicationAPI',
+        'description': 'Submit an adoption application for a pet',
+        'method': 'POST',
+        'path': '/adoption-applications',
+        'bodySchema': ApplicationRequest.model_json_schema(),
+        'responseSchema': {
+            '200': ApplicationResponse.model_json_schema()
+        },
+        'emits': ['application-submitted'],
+        'flows': ['adoption-process']
+    }
+
+    async def handler(req, context):
+        context.logger.info('Processing adoption application', {'body': req.get('body')})
+
+        pet_id = req.get('body').get('petId')
+        applicant = req.get('body').get('applicant')
+
+        application = {
+            'id': f"app-{int(time.time() * 1000)}",
+            'traceId': context.trace_id,
+            'petId': pet_id,
+            'applicant': applicant,
+            'status': 'submitted',
+            'submittedAt': time.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+            'backgroundCheckStatus': 'pending',
+            'homeVisitStatus': 'pending',
+            'finalDecision': 'pending',
+        }
+
+        await context.state.set('applications', application['id'], application)
+
+        await context.emit({
+            'topic': 'application-submitted',
+            'data': {
+                'applicationId': application['id'],
+                'petId': pet_id,
+                'applicant': applicant,
+            }
+        })
+
+        context.logger.info('Adoption application submitted successfully', {
+            'applicationId': application['id'],
+            'petId': pet_id,
+            'applicantEmail': applicant.get('email'),
+        })
+
+        return {
+            'status': 200,
+            'body': {
+                'applicationId': application['id'],
+                'status': 'submitted',
+                'message': 'Your adoption application has been submitted and is being processed.',
+            }
+        }
+    ```
+  </Tab>
+</Tabs>
+
+This API endpoint demonstrates several key workflow concepts:
+- **State storage** - Application data is stored with `state.set()` for persistence across workflow steps
+- **Event emission** - `emit('application-submitted')` triggers the next step in the workflow
+- **Flow grouping** - `flows: ['adoption-process']` groups this with other workflow steps for visualization
+- **Structured data** - Comprehensive validation ensures all required applicant information is captured
+
+![Adoption Application](./../img/adoption-application.png)
+
+When you submits an adoption application, this API immediately responds with confirmation while starting the background process asynchronously.
+
+
+
+## Step 2: Create the Background Check Process
+
+Now let's create the event step that handles the background verification process. This step listens for new applications and performs checks before moving to the next stage.
+
+Create a new file for the background check step:
+
+**File:** `steps/background-check.step.ts`
+
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+    import { EventConfig, Handlers } from 'motia'
+
+    export const config: EventConfig = {
+      type: 'event',
+      name: 'BackgroundCheck',
+      description: 'Verify applicant background and history',
+      subscribes: ['application-submitted'],
+      emits: ['background-check-passed', 'background-check-failed'],
+      flows: ['adoption-process'],
+    }
+
+    export const handler: Handlers['BackgroundCheck'] = async (input, { logger, emit, state }) => {
+      const { applicationId, applicant } = input
+
+      logger.info('Starting background check', {
+        applicationId,
+        applicantEmail: applicant.email,
+      })
+
+      // Get current application from state
+      let application = await state.get('applications', applicationId)
+
+      // Simulate background check process
+      const backgroundResult = performBackgroundCheck(applicant)
+
+      // Update application status in state
+      application.backgroundCheckStatus = backgroundResult.passed ? 'passed' : 'failed'
+      application.backgroundCheckCompletedAt = new Date().toISOString()
+      application.backgroundCheckDetails = backgroundResult.details
+      application.status = backgroundResult.passed ? 'background-check-passed' : 'background-check-failed'
+
+      // Save updated application
+      await state.set('applications', applicationId, application)
+
+      // Emit appropriate event based on result
+      if (backgroundResult.passed) {
+        logger.info('Background check passed', {
+          applicationId,
+          applicantEmail: applicant.email,
+          score: backgroundResult.score,
+        })
+
+        await emit({
+          topic: 'background-check-passed',
+          data: {
+            applicationId,
+            applicant,
+            backgroundScore: backgroundResult.score,
+          },
+        })
+      } else {
+        logger.info('Background check failed', {
+          applicationId,
+          applicantEmail: applicant.email,
+          reason: backgroundResult.reason,
+        })
+
+        await emit({
+          topic: 'background-check-failed',
+          data: {
+            applicationId,
+            applicant,
+            failureReason: backgroundResult.reason,
+          },
+        })
+      }
+    }
+
+    // Simulate background check logic
+    function performBackgroundCheck(applicant: any) {
+      // Simulate some basic checks
+      let score = 100
+      let details = []
+      let reason = null
+
+      // Check experience with pets
+      if (!applicant.hasExperience) {
+        score -= 20
+        details.push('No previous pet experience noted')
+      } else {
+        details.push('Has previous pet experience')
+      }
+
+      // Check living situation
+      if (applicant.livingSituation === 'apartment') {
+        score -= 10
+        details.push('Living in apartment - may have space constraints')
+      } else {
+        details.push(`Good living situation: ${applicant.livingSituation}`)
+      }
+
+      // Simulate random additional factors
+      const randomFactor = Math.random() * 30
+      score += randomFactor
+
+      const passed = score >= 70
+
+      if (!passed) {
+        reason = score < 50 ? 'Insufficient experience and housing concerns' : 'Housing or experience concerns identified'
+      }
+
+      return {
+        passed,
+        score: Math.round(score),
+        details,
+        reason,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    exports.config = {
+      type: 'event',
+      name: 'BackgroundCheck',
+      description: 'Verify applicant background and history',
+      subscribes: ['application-submitted'],
+      emits: ['background-check-passed', 'background-check-failed'],
+      flows: ['adoption-process'],
+    }
+
+    exports.handler = async (input, { logger, emit, state }) => {
+      const { applicationId, applicant } = input
+
+      logger.info('Starting background check', {
+        applicationId,
+        applicantEmail: applicant.email,
+      })
+
+      let application = await state.get('applications', applicationId)
+
+      const backgroundResult = performBackgroundCheck(applicant)
+
+      application.backgroundCheckStatus = backgroundResult.passed ? 'passed' : 'failed'
+      application.backgroundCheckCompletedAt = new Date().toISOString()
+      application.backgroundCheckDetails = backgroundResult.details
+      application.status = backgroundResult.passed ? 'background-check-passed' : 'background-check-failed'
+
+      await state.set('applications', applicationId, application)
+
+      if (backgroundResult.passed) {
+        logger.info('Background check passed', {
+          applicationId,
+          applicantEmail: applicant.email,
+          score: backgroundResult.score,
+        })
+
+        await emit({
+          topic: 'background-check-passed',
+          data: {
+            applicationId,
+            applicant,
+            backgroundScore: backgroundResult.score,
+          },
+        })
+      } else {
+        logger.info('Background check failed', {
+          applicationId,
+          applicantEmail: applicant.email,
+          reason: backgroundResult.reason,
+        })
+
+        await emit({
+          topic: 'background-check-failed',
+          data: {
+            applicationId,
+            applicant,
+            failureReason: backgroundResult.reason,
+          },
+        })
+      }
+    }
+
+    function performBackgroundCheck(applicant) {
+      let score = 100
+      let details = []
+      let reason = null
+
+      if (!applicant.hasExperience) {
+        score -= 20
+        details.push('No previous pet experience noted')
+      } else {
+        details.push('Has previous pet experience')
+      }
+
+      if (applicant.livingSituation === 'apartment') {
+        score -= 10
+        details.push('Living in apartment - may have space constraints')
+      } else {
+        details.push(`Good living situation: ${applicant.livingSituation}`)
+      }
+
+      const randomFactor = Math.random() * 30
+      score += randomFactor
+
+      const passed = score >= 70
+
+      if (!passed) {
+        reason = score < 50 ? 'Insufficient experience and housing concerns' : 'Housing or experience concerns identified'
+      }
+
+      return {
+        passed,
+        score: Math.round(score),
+        details,
+        reason,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    import random
+    from datetime import datetime
+
+    config = {
+        'type': 'event',
+        'name': 'BackgroundCheck',
+        'description': 'Verify applicant background and history',
+        'subscribes': ['application-submitted'],
+        'emits': ['background-check-passed', 'background-check-failed'],
+        'flows': ['adoption-process']
+    }
+
+    async def handler(input_data, context):
+        application_id = input_data.get('applicationId')
+        applicant = input_data.get('applicant')
+
+        context.logger.info('Starting background check', {
+            'applicationId': application_id,
+            'applicantEmail': applicant.get('email'),
+        })
+
+        application = await context.state.get('applications', application_id)
+
+        background_result = perform_background_check(applicant)
+
+        application['backgroundCheckStatus'] = 'passed' if background_result['passed'] else 'failed'
+        application['backgroundCheckCompletedAt'] = datetime.now().isoformat()
+        application['backgroundCheckDetails'] = background_result['details']
+        application['status'] = 'background-check-passed' if background_result['passed'] else 'background-check-failed'
+
+        await context.state.set('applications', application_id, application)
+
+        if background_result['passed']:
+            context.logger.info('Background check passed', {
+                'applicationId': application_id,
+                'applicantEmail': applicant.get('email'),
+                'score': background_result['score'],
+            })
+
+            await context.emit({
+                'topic': 'background-check-passed',
+                'data': {
+                    'applicationId': application_id,
+                    'applicant': applicant,
+                    'backgroundScore': background_result['score'],
+                }
+            })
+        else:
+            context.logger.info('Background check failed', {
+                'applicationId': application_id,
+                'applicantEmail': applicant.get('email'),
+                'reason': background_result['reason'],
+            })
+
+            await context.emit({
+                'topic': 'background-check-failed',
+                'data': {
+                    'applicationId': application_id,
+                    'applicant': applicant,
+                    'failureReason': background_result['reason'],
+                }
+            })
+
+    def perform_background_check(applicant):
+        score = 100
+        details = []
+        reason = None
+
+        if not applicant.get('hasExperience'):
+            score -= 20
+            details.append('No previous pet experience noted')
+        else:
+            details.append('Has previous pet experience')
+
+        if applicant.get('livingSituation') == 'apartment':
+            score -= 10
+            details.append('Living in apartment - may have space constraints')
+        else:
+            details.append(f"Good living situation: {applicant.get('livingSituation')}")
+
+        random_factor = random.random() * 30
+        score += random_factor
+
+        passed = score >= 70
+
+        if not passed:
+            reason = 'Insufficient experience and housing concerns' if score < 50 else 'Housing or experience concerns identified'
+
+        return {
+            'passed': passed,
+            'score': round(score),
+            'details': details,
+            'reason': reason,
+        }
+    ```
+  </Tab>
+</Tabs>
+
+This background check step demonstrates key workflow patterns:
+- **Event subscription** - Listens for `application-submitted` events from the API
+- **Conditional logic** - Emits different events based on check results (`passed` vs `failed`)
+- **State updates** - Updates application status and stores check details
+- **Business logic simulation** - Realistic scoring based on experience and living situation
+- **Branching workflow** - Failed checks stop the process, passed checks continue to home visit
+
+
+Start Background Check 
+![Background Check Start](./../img/start-background-check.png)
+
+Background Check Completed
+![Background Check Completion](./../img/background-check-completed.png)
+
+The background check considers factors like pet experience and living situation to determine if the applicant should proceed to the next step.
+
+
+## Step 3: Create the Home Visit Process
+
+Next, let's create the event step that handles home visit scheduling and completion. This step only runs for applicants who passed the background check.
+
+Create a new file for the home visit step:
+
+**File:** `steps/home-visit.step.ts`
+
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+    import { EventConfig, Handlers } from 'motia'
+
+    export const config: EventConfig = {
+      type: 'event',
+      name: 'HomeVisit',
+      description: 'Schedule and conduct home environment assessment',
+      subscribes: ['background-check-passed'],
+      emits: ['home-visit-completed'],
+      flows: ['adoption-process'],
+    }
+
+    export const handler: Handlers['HomeVisit'] = async (input, { logger, emit, state }) => {
+      const { applicationId, applicant, backgroundScore } = input
+
+      logger.info('Starting home visit process', {
+        applicationId,
+        applicantEmail: applicant.email,
+        backgroundScore,
+      })
+
+      // Get current application from state
+      let application = await state.get('applications', applicationId)
+
+      // Simulate home visit scheduling and completion
+      const homeVisitResult = await scheduleAndConductHomeVisit(applicant, backgroundScore)
+
+      // Update application status in state
+      application.homeVisitStatus = homeVisitResult.passed ? 'passed' : 'failed'
+      application.homeVisitCompletedAt = new Date().toISOString()
+      application.homeVisitDetails = homeVisitResult.details
+      application.homeVisitScore = homeVisitResult.score
+      application.status = 'home-visit-completed'
+
+      // Save updated application
+      await state.set('applications', applicationId, application)
+
+      logger.info('Home visit completed', {
+        applicationId,
+        applicantEmail: applicant.email,
+        passed: homeVisitResult.passed,
+        score: homeVisitResult.score,
+      })
+
+      // Emit completion event with all results
+      await emit({
+        topic: 'home-visit-completed',
+        data: {
+          applicationId,
+          applicant,
+          backgroundScore,
+          homeVisitResult,
+        },
+      })
+    }
+
+    // Simulate home visit process
+    async function scheduleAndConductHomeVisit(applicant: any, backgroundScore: number) {
+      // Simulate scheduling delay
+      await simulateDelay(1000) // 1 second delay
+
+      let score = 85 // Base score for home visits
+      let details = []
+
+      // Factor in living situation
+      switch (applicant.livingSituation) {
+        case 'house':
+          score += 10
+          details.push('House provides excellent space for pet')
+          break
+        case 'condo':
+          score += 5
+          details.push('Condo provides adequate space for pet')
+          break
+        case 'apartment':
+          score -= 5
+          details.push('Apartment space may be limited for larger pets')
+          break
+      }
+
+      // Factor in background check score
+      if (backgroundScore >= 90) {
+        score += 5
+        details.push('Excellent background check score boosts confidence')
+      } else if (backgroundScore < 75) {
+        score -= 5
+        details.push('Lower background score raises some concerns')
+      }
+
+      // Simulate environmental factors
+      const environmentalFactors = [
+        { condition: 'Clean and safe environment', impact: 5 },
+        { condition: 'Adequate food and water setup area', impact: 3 },
+        { condition: 'Safe outdoor access or exercise plan', impact: 4 },
+        { condition: 'No hazardous materials accessible', impact: 3 },
+      ]
+
+      // Randomly apply some environmental factors
+      environmentalFactors.forEach(factor => {
+        if (Math.random() > 0.3) { // 70% chance each factor is positive
+          score += factor.impact
+          details.push(`✓ ${factor.condition}`)
+        } else {
+          score -= factor.impact / 2
+          details.push(`⚠ Concern: ${factor.condition.toLowerCase()}`)
+        }
+      })
+
+      // Add some random variation
+      const randomVariation = (Math.random() - 0.5) * 10
+      score += randomVariation
+
+      const passed = score >= 75
+
+      if (!passed) {
+        details.push('Overall home environment needs improvement before adoption')
+      } else {
+        details.push('Home environment suitable for pet adoption')
+      }
+
+      return {
+        passed,
+        score: Math.round(score),
+        details,
+        scheduledDate: new Date().toISOString(),
+        completedDate: new Date().toISOString(),
+      }
+    }
+
+    // Helper function to simulate processing delay
+    function simulateDelay(ms: number): Promise<void> {
+      return new Promise(resolve => setTimeout(resolve, ms))
+    }
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    exports.config = {
+      type: 'event',
+      name: 'HomeVisit',
+      description: 'Schedule and conduct home environment assessment',
+      subscribes: ['background-check-passed'],
+      emits: ['home-visit-completed'],
+      flows: ['adoption-process'],
+    }
+
+    exports.handler = async (input, { logger, emit, state }) => {
+      const { applicationId, applicant, backgroundScore } = input
+
+      logger.info('Starting home visit process', {
+        applicationId,
+        applicantEmail: applicant.email,
+        backgroundScore,
+      })
+
+      let application = await state.get('applications', applicationId)
+
+      const homeVisitResult = await scheduleAndConductHomeVisit(applicant, backgroundScore)
+
+      application.homeVisitStatus = homeVisitResult.passed ? 'passed' : 'failed'
+      application.homeVisitCompletedAt = new Date().toISOString()
+      application.homeVisitDetails = homeVisitResult.details
+      application.homeVisitScore = homeVisitResult.score
+      application.status = 'home-visit-completed'
+
+      await state.set('applications', applicationId, application)
+
+      logger.info('Home visit completed', {
+        applicationId,
+        applicantEmail: applicant.email,
+        passed: homeVisitResult.passed,
+        score: homeVisitResult.score,
+      })
+
+      await emit({
+        topic: 'home-visit-completed',
+        data: {
+          applicationId,
+          applicant,
+          backgroundScore,
+          homeVisitResult,
+        },
+      })
+    }
+
+    async function scheduleAndConductHomeVisit(applicant, backgroundScore) {
+      await simulateDelay(1000)
+
+      let score = 85
+      let details = []
+
+      switch (applicant.livingSituation) {
+        case 'house':
+          score += 10
+          details.push('House provides excellent space for pet')
+          break
+        case 'condo':
+          score += 5
+          details.push('Condo provides adequate space for pet')
+          break
+        case 'apartment':
+          score -= 5
+          details.push('Apartment space may be limited for larger pets')
+          break
+      }
+
+      if (backgroundScore >= 90) {
+        score += 5
+        details.push('Excellent background check score boosts confidence')
+      } else if (backgroundScore < 75) {
+        score -= 5
+        details.push('Lower background score raises some concerns')
+      }
+
+      const environmentalFactors = [
+        { condition: 'Clean and safe environment', impact: 5 },
+        { condition: 'Adequate food and water setup area', impact: 3 },
+        { condition: 'Safe outdoor access or exercise plan', impact: 4 },
+        { condition: 'No hazardous materials accessible', impact: 3 },
+      ]
+
+      environmentalFactors.forEach(factor => {
+        if (Math.random() > 0.3) {
+          score += factor.impact
+          details.push(`✓ ${factor.condition}`)
+        } else {
+          score -= factor.impact / 2
+          details.push(`⚠ Concern: ${factor.condition.toLowerCase()}`)
+        }
+      })
+
+      const randomVariation = (Math.random() - 0.5) * 10
+      score += randomVariation
+
+      const passed = score >= 75
+
+      if (!passed) {
+        details.push('Overall home environment needs improvement before adoption')
+      } else {
+        details.push('Home environment suitable for pet adoption')
+      }
+
+      return {
+        passed,
+        score: Math.round(score),
+        details,
+        scheduledDate: new Date().toISOString(),
+        completedDate: new Date().toISOString(),
+      }
+    }
+
+    function simulateDelay(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    import asyncio
+    import random
+    from datetime import datetime
+
+    config = {
+        'type': 'event',
+        'name': 'HomeVisit',
+        'description': 'Schedule and conduct home environment assessment',
+        'subscribes': ['background-check-passed'],
+        'emits': ['home-visit-completed'],
+        'flows': ['adoption-process']
+    }
+
+    async def handler(input_data, context):
+        application_id = input_data.get('applicationId')
+        applicant = input_data.get('applicant')
+        background_score = input_data.get('backgroundScore')
+
+        context.logger.info('Starting home visit process', {
+            'applicationId': application_id,
+            'applicantEmail': applicant.get('email'),
+            'backgroundScore': background_score,
+        })
+
+        application = await context.state.get('applications', application_id)
+
+        home_visit_result = await schedule_and_conduct_home_visit(applicant, background_score)
+
+        application['homeVisitStatus'] = 'passed' if home_visit_result['passed'] else 'failed'
+        application['homeVisitCompletedAt'] = datetime.now().isoformat()
+        application['homeVisitDetails'] = home_visit_result['details']
+        application['homeVisitScore'] = home_visit_result['score']
+        application['status'] = 'home-visit-completed'
+
+        await context.state.set('applications', application_id, application)
+
+        context.logger.info('Home visit completed', {
+            'applicationId': application_id,
+            'applicantEmail': applicant.get('email'),
+            'passed': home_visit_result['passed'],
+            'score': home_visit_result['score'],
+        })
+
+        await context.emit({
+            'topic': 'home-visit-completed',
+            'data': {
+                'applicationId': application_id,
+                'applicant': applicant,
+                'backgroundScore': background_score,
+                'homeVisitResult': home_visit_result,
+            }
+        })
+
+    async def schedule_and_conduct_home_visit(applicant, background_score):
+        await asyncio.sleep(1)  # Simulate delay
+
+        score = 85
+        details = []
+
+        living_situation = applicant.get('livingSituation')
+        if living_situation == 'house':
+            score += 10
+            details.append('House provides excellent space for pet')
+        elif living_situation == 'condo':
+            score += 5
+            details.append('Condo provides adequate space for pet')
+        elif living_situation == 'apartment':
+            score -= 5
+            details.append('Apartment space may be limited for larger pets')
+
+        if background_score >= 90:
+            score += 5
+            details.append('Excellent background check score boosts confidence')
+        elif background_score < 75:
+            score -= 5
+            details.append('Lower background score raises some concerns')
+
+        environmental_factors = [
+            {'condition': 'Clean and safe environment', 'impact': 5},
+            {'condition': 'Adequate food and water setup area', 'impact': 3},
+            {'condition': 'Safe outdoor access or exercise plan', 'impact': 4},
+            {'condition': 'No hazardous materials accessible', 'impact': 3},
+        ]
+
+        for factor in environmental_factors:
+            if random.random() > 0.3:
+                score += factor['impact']
+                details.append(f"✓ {factor['condition']}")
+            else:
+                score -= factor['impact'] / 2
+                details.append(f"⚠ Concern: {factor['condition'].lower()}")
+
+        random_variation = (random.random() - 0.5) * 10
+        score += random_variation
+
+        passed = score >= 75
+
+        if not passed:
+            details.append('Overall home environment needs improvement before adoption')
+        else:
+            details.append('Home environment suitable for pet adoption')
+
+        return {
+            'passed': passed,
+            'score': round(score),
+            'details': details,
+            'scheduledDate': datetime.now().isoformat(),
+            'completedDate': datetime.now().isoformat(),
+        }
+    ```
+  </Tab>
+</Tabs>
+
+This home visit step demonstrates advanced workflow concepts:
+- **Sequential processing** - Only runs after background check passes
+- **Data accumulation** - Combines background score with home visit assessment
+- **Environmental scoring** - Evaluates multiple factors for comprehensive assessment
+- **Simulated delays** - Shows how real-world processes take time
+- **Detailed logging** - Tracks assessment details for transparency
+- **Single completion event** - Emits one event regardless of pass/fail for the next step to handle
+
+Home Visit Check 
+![Background Check Start](./../img/home-visit-check-start.png)
+
+Home Visit Check Completed
+![Background Check Completion](./../img/home-visit-check-completed.png)
+
+The home visit considers living situation, background check results, and environmental factors to create a comprehensive assessment.
+
+
+## Step 4: Create the Approval Decision Process
+
+Now let's create the event step that makes the final adoption decision based on all previous assessments. This step evaluates both background check and home visit results.
+
+Create a new file for the approval decision step:
+
+**File:** `steps/approval-decision.step.ts`
+
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+    import { EventConfig, Handlers } from 'motia'
+
+    export const config: EventConfig = {
+      type: 'event',
+      name: 'ApprovalDecision',
+      description: 'Make final adoption decision based on all assessments',
+      subscribes: ['home-visit-completed'],
+      emits: ['application-approved', 'application-rejected'],
+      flows: ['adoption-process'],
+    }
+
+    export const handler: Handlers['ApprovalDecision'] = async (input, { logger, emit, state }) => {
+      const { applicationId, applicant, backgroundScore, homeVisitResult } = input
+
+      logger.info('Making final approval decision', {
+        applicationId,
+        applicantEmail: applicant.email,
+        backgroundScore,
+        homeVisitPassed: homeVisitResult.passed,
+        homeVisitScore: homeVisitResult.score,
+      })
+
+      // Get current application from state
+      let application = await state.get('applications', applicationId)
+
+      // Make final decision based on all factors
+      const finalDecision = makeFinalDecision(backgroundScore, homeVisitResult, applicant)
+
+      // Update application with final decision
+      application.finalDecision = finalDecision.approved ? 'approved' : 'rejected'
+      application.finalDecisionMadeAt = new Date().toISOString()
+      application.finalDecisionDetails = finalDecision.details
+      application.overallScore = finalDecision.overallScore
+      application.status = finalDecision.approved ? 'approved' : 'rejected'
+
+      // Save final application state
+      await state.set('applications', applicationId, application)
+
+      if (finalDecision.approved) {
+        logger.info('Application approved', {
+          applicationId,
+          applicantEmail: applicant.email,
+          overallScore: finalDecision.overallScore,
+          reason: finalDecision.reason,
+        })
+
+        await emit({
+          topic: 'application-approved',
+          data: {
+            applicationId,
+            applicant,
+            petId: application.petId,
+            approvalDetails: {
+              backgroundScore,
+              homeVisitScore: homeVisitResult.score,
+              overallScore: finalDecision.overallScore,
+              approvedAt: application.finalDecisionMadeAt,
+            },
+          },
+        })
+      } else {
+        logger.info('Application rejected', {
+          applicationId,
+          applicantEmail: applicant.email,
+          overallScore: finalDecision.overallScore,
+          reason: finalDecision.reason,
+        })
+
+        await emit({
+          topic: 'application-rejected',
+          data: {
+            applicationId,
+            applicant,
+            petId: application.petId,
+            rejectionDetails: {
+              backgroundScore,
+              homeVisitScore: homeVisitResult.score,
+              overallScore: finalDecision.overallScore,
+              reason: finalDecision.reason,
+              rejectedAt: application.finalDecisionMadeAt,
+            },
+          },
+        })
+      }
+    }
+
+    // Make final adoption decision
+    function makeFinalDecision(backgroundScore: number, homeVisitResult: any, applicant: any) {
+      let overallScore = 0
+      let details = []
+
+      // Weight the scores (background check: 40%, home visit: 60%)
+      const weightedBackgroundScore = backgroundScore * 0.4
+      const weightedHomeVisitScore = homeVisitResult.score * 0.6
+      overallScore = weightedBackgroundScore + weightedHomeVisitScore
+
+      details.push(`Background check: ${backgroundScore}/100 (weighted: ${Math.round(weightedBackgroundScore)})`)
+      details.push(`Home visit: ${homeVisitResult.score}/100 (weighted: ${Math.round(weightedHomeVisitScore)})`)
+      details.push(`Overall score: ${Math.round(overallScore)}/100`)
+
+      // Home visit must pass regardless of score
+      if (!homeVisitResult.passed) {
+        return {
+          approved: false,
+          overallScore: Math.round(overallScore),
+          reason: 'Home visit assessment did not meet minimum requirements',
+          details: [...details, 'Home visit failed - adoption cannot proceed'],
+        }
+      }
+
+      // Minimum overall score requirement
+      if (overallScore < 75) {
+        return {
+          approved: false,
+          overallScore: Math.round(overallScore),
+          reason: `Overall score ${Math.round(overallScore)} below minimum requirement of 75`,
+          details: [...details, 'Score below minimum threshold for adoption'],
+        }
+      }
+
+      // Additional considerations for high-scoring applications
+      if (overallScore >= 90) {
+        details.push('Excellent candidate - approved with high confidence')
+      } else if (overallScore >= 85) {
+        details.push('Very good candidate - approved with confidence')
+      } else {
+        details.push('Good candidate - approved with standard conditions')
+      }
+
+      // Special considerations
+      if (applicant.hasExperience && applicant.livingSituation === 'house') {
+        details.push('Bonus: Experienced owner with ideal living situation')
+      }
+
+      return {
+        approved: true,
+        overallScore: Math.round(overallScore),
+        reason: `Application approved with overall score of ${Math.round(overallScore)}`,
+        details,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    exports.config = {
+      type: 'event',
+      name: 'ApprovalDecision',
+      description: 'Make final adoption decision based on all assessments',
+      subscribes: ['home-visit-completed'],
+      emits: ['application-approved', 'application-rejected'],
+      flows: ['adoption-process'],
+    }
+
+    exports.handler = async (input, { logger, emit, state }) => {
+      const { applicationId, applicant, backgroundScore, homeVisitResult } = input
+
+      logger.info('Making final approval decision', {
+        applicationId,
+        applicantEmail: applicant.email,
+        backgroundScore,
+        homeVisitPassed: homeVisitResult.passed,
+        homeVisitScore: homeVisitResult.score,
+      })
+
+      let application = await state.get('applications', applicationId)
+
+      const finalDecision = makeFinalDecision(backgroundScore, homeVisitResult, applicant)
+
+      application.finalDecision = finalDecision.approved ? 'approved' : 'rejected'
+      application.finalDecisionMadeAt = new Date().toISOString()
+      application.finalDecisionDetails = finalDecision.details
+      application.overallScore = finalDecision.overallScore
+      application.status = finalDecision.approved ? 'approved' : 'rejected'
+
+      await state.set('applications', applicationId, application)
+
+      if (finalDecision.approved) {
+        logger.info('Application approved', {
+          applicationId,
+          applicantEmail: applicant.email,
+          overallScore: finalDecision.overallScore,
+          reason: finalDecision.reason,
+        })
+
+        await emit({
+          topic: 'application-approved',
+          data: {
+            applicationId,
+            applicant,
+            petId: application.petId,
+            approvalDetails: {
+              backgroundScore,
+              homeVisitScore: homeVisitResult.score,
+              overallScore: finalDecision.overallScore,
+              approvedAt: application.finalDecisionMadeAt,
+            },
+          },
+        })
+      } else {
+        logger.info('Application rejected', {
+          applicationId,
+          applicantEmail: applicant.email,
+          overallScore: finalDecision.overallScore,
+          reason: finalDecision.reason,
+        })
+
+        await emit({
+          topic: 'application-rejected',
+          data: {
+            applicationId,
+            applicant,
+            petId: application.petId,
+            rejectionDetails: {
+              backgroundScore,
+              homeVisitScore: homeVisitResult.score,
+              overallScore: finalDecision.overallScore,
+              reason: finalDecision.reason,
+              rejectedAt: application.finalDecisionMadeAt,
+            },
+          },
+        })
+      }
+    }
+
+    function makeFinalDecision(backgroundScore, homeVisitResult, applicant) {
+      let overallScore = 0
+      let details = []
+
+      const weightedBackgroundScore = backgroundScore * 0.4
+      const weightedHomeVisitScore = homeVisitResult.score * 0.6
+      overallScore = weightedBackgroundScore + weightedHomeVisitScore
+
+      details.push(`Background check: ${backgroundScore}/100 (weighted: ${Math.round(weightedBackgroundScore)})`)
+      details.push(`Home visit: ${homeVisitResult.score}/100 (weighted: ${Math.round(weightedHomeVisitScore)})`)
+      details.push(`Overall score: ${Math.round(overallScore)}/100`)
+
+      if (!homeVisitResult.passed) {
+        return {
+          approved: false,
+          overallScore: Math.round(overallScore),
+          reason: 'Home visit assessment did not meet minimum requirements',
+          details: [...details, 'Home visit failed - adoption cannot proceed'],
+        }
+      }
+
+      if (overallScore < 75) {
+        return {
+          approved: false,
+          overallScore: Math.round(overallScore),
+          reason: `Overall score ${Math.round(overallScore)} below minimum requirement of 75`,
+          details: [...details, 'Score below minimum threshold for adoption'],
+        }
+      }
+
+      if (overallScore >= 90) {
+        details.push('Excellent candidate - approved with high confidence')
+      } else if (overallScore >= 85) {
+        details.push('Very good candidate - approved with confidence')
+      } else {
+        details.push('Good candidate - approved with standard conditions')
+      }
+
+      if (applicant.hasExperience && applicant.livingSituation === 'house') {
+        details.push('Bonus: Experienced owner with ideal living situation')
+      }
+
+      return {
+        approved: true,
+        overallScore: Math.round(overallScore),
+        reason: `Application approved with overall score of ${Math.round(overallScore)}`,
+        details,
+      }
+    }
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+    from datetime import datetime
+
+    config = {
+        'type': 'event',
+        'name': 'ApprovalDecision',
+        'description': 'Make final adoption decision based on all assessments',
+        'subscribes': ['home-visit-completed'],
+        'emits': ['application-approved', 'application-rejected'],
+        'flows': ['adoption-process']
+    }
+
+    async def handler(input_data, context):
+        application_id = input_data.get('applicationId')
+        applicant = input_data.get('applicant')
+        background_score = input_data.get('backgroundScore')
+        home_visit_result = input_data.get('homeVisitResult')
+
+        context.logger.info('Making final approval decision', {
+            'applicationId': application_id,
+            'applicantEmail': applicant.get('email'),
+            'backgroundScore': background_score,
+            'homeVisitPassed': home_visit_result.get('passed'),
+            'homeVisitScore': home_visit_result.get('score'),
+        })
+
+        application = await context.state.get('applications', application_id)
+
+        final_decision = make_final_decision(background_score, home_visit_result, applicant)
+
+        application['finalDecision'] = 'approved' if final_decision['approved'] else 'rejected'
+        application['finalDecisionMadeAt'] = datetime.now().isoformat()
+        application['finalDecisionDetails'] = final_decision['details']
+        application['overallScore'] = final_decision['overallScore']
+        application['status'] = 'approved' if final_decision['approved'] else 'rejected'
+
+        await context.state.set('applications', application_id, application)
+
+        if final_decision['approved']:
+            context.logger.info('Application approved', {
+                'applicationId': application_id,
+                'applicantEmail': applicant.get('email'),
+                'overallScore': final_decision['overallScore'],
+                'reason': final_decision['reason'],
+            })
+
+            await context.emit({
+                'topic': 'application-approved',
+                'data': {
+                    'applicationId': application_id,
+                    'applicant': applicant,
+                    'petId': application.get('petId'),
+                    'approvalDetails': {
+                        'backgroundScore': background_score,
+                        'homeVisitScore': home_visit_result.get('score'),
+                        'overallScore': final_decision['overallScore'],
+                        'approvedAt': application['finalDecisionMadeAt'],
+                    },
+                }
+            })
+        else:
+            context.logger.info('Application rejected', {
+                'applicationId': application_id,
+                'applicantEmail': applicant.get('email'),
+                'overallScore': final_decision['overallScore'],
+                'reason': final_decision['reason'],
+            })
+
+            await context.emit({
+                'topic': 'application-rejected',
+                'data': {
+                    'applicationId': application_id,
+                    'applicant': applicant,
+                    'petId': application.get('petId'),
+                    'rejectionDetails': {
+                        'backgroundScore': background_score,
+                        'homeVisitScore': home_visit_result.get('score'),
+                        'overallScore': final_decision['overallScore'],
+                        'reason': final_decision['reason'],
+                        'rejectedAt': application['finalDecisionMadeAt'],
+                    },
+                }
+            })
+
+    def make_final_decision(background_score, home_visit_result, applicant):
+        overall_score = 0
+        details = []
+
+        weighted_background_score = background_score * 0.4
+        weighted_home_visit_score = home_visit_result.get('score') * 0.6
+        overall_score = weighted_background_score + weighted_home_visit_score
+
+        details.append(f"Background check: {background_score}/100 (weighted: {round(weighted_background_score)})")
+        details.append(f"Home visit: {home_visit_result.get('score')}/100 (weighted: {round(weighted_home_visit_score)})")
+        details.append(f"Overall score: {round(overall_score)}/100")
+
+        if not home_visit_result.get('passed'):
+            return {
+                'approved': False,
+                'overallScore': round(overall_score),
+                'reason': 'Home visit assessment did not meet minimum requirements',
+                'details': details + ['Home visit failed - adoption cannot proceed'],
+            }
+
+        if overall_score < 75:
+            return {
+                'approved': False,
+                'overallScore': round(overall_score),
+                'reason': f"Overall score {round(overall_score)} below minimum requirement of 75",
+                'details': details + ['Score below minimum threshold for adoption'],
+            }
+
+        if overall_score >= 90:
+            details.append('Excellent candidate - approved with high confidence')
+        elif overall_score >= 85:
+            details.append('Very good candidate - approved with confidence')
+        else:
+            details.append('Good candidate - approved with standard conditions')
+
+        if applicant.get('hasExperience') and applicant.get('livingSituation') == 'house':
+            details.append('Bonus: Experienced owner with ideal living situation')
+
+        return {
+            'approved': True,
+            'overallScore': round(overall_score),
+            'reason': f"Application approved with overall score of {round(overall_score)}",
+            'details': details,
+        }
+    ```
+  </Tab>
+</Tabs>
+
+Making Final Decision
+![Background Check Start](./../img/making-final-decision.png)
+
+Application Approved
+![Background Check Completion](./../img/application-approved.png)
+
+This approval decision step demonstrates sophisticated workflow logic:
+- **Multi-factor decision making** - Combines background check and home visit scores with weighted scoring
+- **Business rule enforcement** - Hard requirements (home visit must pass) and soft requirements (minimum scores)
+- **Detailed decision tracking** - Stores comprehensive decision rationale for transparency
+- **Conditional event emission** - Emits different events based on approval/rejection decision
+- **Final state updates** - Marks the application as completed with final status
+
+The decision process uses a weighted scoring system (40% background, 60% home visit) while enforcing that certain criteria must be met regardless of score.
