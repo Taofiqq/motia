@@ -72,7 +72,6 @@ Open your existing **`steps/create-pet.step.ts`** file and update it:
           age: z.number(),
         }),
       },
-
       // Add this line to emit events
       emits: ['pet-created'],
     }
@@ -84,6 +83,12 @@ Open your existing **`steps/create-pet.step.ts`** file and update it:
         id: Date.now().toString(),
         ...req.body,
       }
+
+      logger.info("Adoption welcome message sent", {
+        petName: "Buddy",
+        message: "Welcome to our pet store! Here are care instructions for Buddy.",
+        recipient: "adopter@example.com", // fake email
+      });
 
       // Emit event to trigger background jobs
       await emit({
@@ -186,6 +191,12 @@ Open your existing **`steps/create-pet.step.ts`** file and update it:
             'id': str(int(time.time() * 1000)),
             **req.get('body')
         }
+
+        context.logger.info("Adoption welcome message sent", {
+            'petName': 'Buddy',
+            'message': 'Welcome to our pet store! Here are care instructions for Buddy.',
+            'recipient': 'adopter@example.com'  # fake email
+        })
         
         # Emit event to trigger background jobs
         await context.emit({
@@ -206,7 +217,9 @@ The key changes are:
 - Added `emit` to the handler parameters  
 - Added `await emit()` call after creating the pet
 
-Now when someone creates a pet, your API will emit a `pet-created` event that background jobs can listen for.
+Now when you create a pet, your API will emit a `pet-created` event that background jobs can listen for.
+
+![Get All Pets](./../img/pet-background-logger.png)
 
 ## Step 2: Create the Adoption Follow-up Background Job
 
@@ -320,6 +333,13 @@ This event step demonstrates how background jobs work:
 
 When you create a pet via the API, you'll see these welcome messages appear in your logs automatically.
 
+Adoption Followup Message
+![Get All Pets](./../img/adoption-followup.png)
+
+Welcome Care Package
+![Get All Pets](./../img/welcome-care-package.png)
+
+
 ## Step 3: Create Daily Feeding Reminders
 
 Now let's create a cron step that runs every day to remind pet owners about feeding their pets.
@@ -337,7 +357,7 @@ Create a new file for the daily feeding reminders:
       type: 'cron',
       name: 'DailyFeedingReminder',
       description: 'Send daily feeding reminders for all pets',
-      cron: '0 8 * * *', // Every day at 8:00 AM
+      cron: '* * * * *', // Every day at 8:00 AM
     }
 
     export const handler: Handlers['DailyFeedingReminder'] = async ({ logger, state }) => {
@@ -469,6 +489,13 @@ This cron step demonstrates scheduled job patterns:
 - **Structured logging** - Each reminder is logged with detailed information
 
 This job will run automatically every morning, ensuring all pets get their daily feeding reminders.
+
+Daily Notification Job starting
+![Get All Pets](./../img/daily-pet-reminder-one.png)
+
+Daily Notification Job completion
+![Get All Pets](./../img/daily-pet-reminder-two.png)
+
 
 ## Step 4: Create Weekly Grooming Notifications
 
@@ -693,6 +720,12 @@ This weekly cron step shows more advanced scheduling:
 - **Helper function** - Demonstrates code organization within steps
 
 This job ensures all pets get appropriate grooming reminders based on their specific needs.
+
+Weekly Notification Job starting
+![Get All Pets](./../img/weekly-pet-reminder-one.png)
+
+Weekly Notification Job completion
+![Get All Pets](./../img/weekly-pet-reminder-two.png)
 
 ## Step 5: Create Monthly Vet Checkup Alerts
 
@@ -969,5 +1002,11 @@ This monthly cron step demonstrates the most complex scheduling pattern:
 - **Age-based care** - Senior pets (7+) get enhanced monitoring, young pets need frequent checkups
 - **Urgency levels** - Different pets have different health priorities
 - **Comprehensive logging** - Includes month context and detailed health recommendations
+
+Monthly Notification Job starting
+![Get All Pets](./../img/monthly-pet-reminder-one.png)
+
+Monthly Notification Job completion
+![Get All Pets](./../img/monthly-pet-reminder-two.png)
 
 This ensures all pets receive appropriate veterinary care based on their age and breed characteristics.
