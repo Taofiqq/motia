@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'fumadocs-ui/css/ocean.css';
 @import 'fumadocs-ui/css/preset.css';
+@import 'fumadocs-twoslash/twoslash.css';
 
 :root {
   --background: #ffffff;
@@ -229,5 +230,35 @@ pre > code {
       0px -124px 75px 0px rgba(0, 0, 0, 0.25),
       0px -55px 55px 0px rgba(0, 0, 0, 0.33),
       0px -14px 30px 0px rgba(0, 0, 0, 0.45);
+  }
+}
+
+.vercel-oss-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background-color: #1a1a1a;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  border: 1px solid #333;
+  animation: vercel-glow-animation 2s infinite;
+  transition: all 0.2s ease-in-out;
+}
+
+.vercel-oss-button:hover {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
+@keyframes vercel-glow-animation {
+  0%,
+  100% {
+    box-shadow: 0 0 2px #fff, 0 0 4px #fff, 0 0 6px #0070f3, 0 0 8px #0070f3;
+  }
+  50% {
+    box-shadow: 0 0 4px #fff, 0 0 8px #fff, 0 0 12px #0070f3, 0 0 16px #0070f3;
   }
 }

@@ -2,12 +2,13 @@
   "defaultOpen": true,
   "pages": [
     "steps",
-    "streams",
     "flows-and-visualization",
+    "state-management", 
+    "environment-variables",
+    "streams",
     "logging-and-debugging",
-    "state-management",
+    "testing",
     "cli",
-    "deployment",
-    "testing"
+    "deployment"
   ]
 }

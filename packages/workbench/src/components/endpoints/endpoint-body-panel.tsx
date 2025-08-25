@@ -7,9 +7,14 @@ import ReactJson from 'react18-json-view'
 import 'react18-json-view/src/dark.css'
 import 'react18-json-view/src/style.css'
 import { convertJsonSchemaToJson } from './hooks/utils'
-type Props = { endpoint: ApiEndpoint; onChange?: (body: string) => void; onValidate?: (isValid: boolean) => void }
+type Props = {
+  endpoint: ApiEndpoint
+  onChange?: (body: string) => void
+  onValidate?: (isValid: boolean) => void
+  panelName: string
+}
 
-export const EndpointBodyPanel: FC<Props> = ({ endpoint, onChange, onValidate }) => {
+export const EndpointBodyPanel: FC<Props> = ({ endpoint, onChange, onValidate, panelName }) => {
   const shouldHaveBody = ['post', 'put', 'patch'].includes(endpoint.method.toLowerCase())
   const { body, setBody } = useJsonSchemaToJson(endpoint.bodySchema)
 
@@ -23,7 +28,7 @@ export const EndpointBodyPanel: FC<Props> = ({ endpoint, onChange, onValidate })
   }
 
   return (
-    <Panel title="Body" size="sm" contentClassName="p-0" data-testid="endpoint-body-panel">
+    <Panel title="Body" size="sm" contentClassName="p-0" data-testid={`endpoint-body-panel__${panelName}`}>
       {onChange ? (
         <JsonEditor value={body} schema={endpoint.bodySchema} onChange={handleBodyChange} onValidate={onValidate} />
       ) : (

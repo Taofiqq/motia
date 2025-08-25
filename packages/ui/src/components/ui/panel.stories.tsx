@@ -54,7 +54,16 @@ const meta: Meta<typeof Panel> = {
     },
     tabs: {
       control: 'object',
-      description: 'Tabs configuration with array of tab objects containing label and content',
+      description:
+        'Tabs configuration with array of tab objects { label, content, labelComponent?, data-testid? }',
+    },
+    contentClassName: {
+      control: 'text',
+      description: 'Additional CSS classes to apply to the panel content area',
+    },
+    'data-testid': {
+      control: 'text',
+      description: 'Optional test id for the root panel element',
     },
   },
 }
@@ -297,6 +306,7 @@ export const WithTabs: Story = {
         icon: <Copy />,
         onClick: () => console.log('Copy clicked'),
         label: 'Copy data',
+        active: true,
       },
       {
         icon: <X />,
@@ -580,5 +590,67 @@ export const WithChildren: Story = {
         </div>
       </div>
     ),
+  },
+}
+
+// Tabs with custom label components (icons + text)
+export const TabsWithCustomLabels: Story = {
+  args: {
+    title: 'Analytics',
+    variant: 'default',
+    tabs: [
+      {
+        label: 'Overview',
+        labelComponent: (
+          <div className="flex items-center gap-2">
+            <Activity className="w-4 h-4" />
+            <span>Overview</span>
+          </div>
+        ),
+        content: <div className="text-sm text-muted-foreground">Overview content</div>,
+      },
+      {
+        label: 'Users',
+        labelComponent: (
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            <span>Users</span>
+          </div>
+        ),
+        content: <div className="text-sm text-muted-foreground">Users content</div>,
+      },
+      {
+        label: 'Settings',
+        labelComponent: (
+          <div className="flex items-center gap-2">
+            <Settings className="w-4 h-4" />
+            <span>Settings</span>
+          </div>
+        ),
+        content: <div className="text-sm text-muted-foreground">Settings content</div>,
+      },
+    ],
+    actions: [
+      {
+        icon: <Copy />,
+        onClick: () => console.log('Copy clicked'),
+        label: 'Copy',
+      },
+    ],
+  },
+}
+
+// Demonstrates custom styling for the content area
+export const WithCustomContentClassName: Story = {
+  args: {
+    title: 'Custom Content Area',
+    subtitle: 'Using contentClassName to style the inner area',
+    variant: 'outlined',
+    contentClassName: 'bg-secondary/30 rounded-md',
+    details: [
+      { label: 'A', value: 'Alpha' },
+      { label: 'B', value: 'Beta', highlighted: true },
+      { label: 'C', value: 'Charlie' },
+    ],
   },
 }

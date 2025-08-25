@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { AGENT_GMAIL, AGENT_ICONS, AGENT_TABS } from './constants/agentExplorer'
 
 const transition = {
-  type: 'spring',
+  type: 'spring' as const,
   mass: 0.15,
   damping: 20,
   stiffness: 100,

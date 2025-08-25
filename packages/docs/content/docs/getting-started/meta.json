@@ -2,11 +2,12 @@
   "title": "Getting Started",
   "defaultOpen": true,
   "pages": [
-    "installation",
-    "quick-start",
+    "quick-start", 
+    "project-structure",
     "build-your-first-app",
     "build-your-first-background-jobs",
     "prerequisites",
+    "build-your-first-api",
     "core-concepts"
   ]
 }

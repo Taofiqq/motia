@@ -3,6 +3,9 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --default-font-family: 'DM Sans', ui-sans-serif, sans-serif;
+  --font-dm-mono: 'DM Mono', ui-monospace, monospace;
+
   line-height: 1.5;
   font-size: 16px;
 

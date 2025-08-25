@@ -4,6 +4,7 @@ import { program } from 'commander'
 import './cloud'
 import { version } from './version'
 import { handler } from './cloud/config-utils'
+import inquirer from 'inquirer'
 
 const defaultPort = 3000
 const defaultHost = '0.0.0.0'
@@ -33,15 +34,26 @@ program
   .option('-c, --cursor', 'Copy .cursor folder from template')
   .option('-i, --interactive', 'Use interactive prompts to create project')
   .option('-y, --skip-confirmation', 'Skip confirmation prompt')
+  .option('-d, --skip-tutorial', 'Skip the motia tutorial', false)
   .action(
     handler(async (arg, context) => {
       if (arg.name || arg.template || arg.cursor) {
         const { create } = require('./create')
+
+        const disableTutorial = await inquirer.prompt({
+          type: 'confirm',
+          name: 'disableTutorial',
+          message: 'Do you wish to disable the motia tutorial?',
+          default: arg.skipTutorial,
+          when: () => arg.skipTutorial === false,
+        })
+
         await create({
           projectName: arg.name ?? '.',
           template: arg.template ?? 'default',
           cursorEnabled: arg.cursor,
           context,
+          skipTutorialTemplates: disableTutorial.disableTutorial,
         })
       } else {
         const skipConfirmation = arg.skipConfirmation ?? false

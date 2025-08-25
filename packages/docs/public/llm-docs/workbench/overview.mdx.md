@@ -9,7 +9,7 @@ Motia Workbench is a development platform that helps you build and debug your Mo
 - Monitor real-time logs
 - Debug issues
 
-![Flow Visualization in Workbench](./../img/demo-workbench.png)
+![Flow Visualization in Workbench](./../img/motia-build-your-app.gif)
 
 ## Getting Started
 
@@ -31,6 +31,7 @@ Start workbench by running:
 
 <Steps>
   <Step>
+    
   ### Flow Visualization
   See your entire flow as an interactive diagram:
   - Steps appear as connected nodes
@@ -39,18 +40,29 @@ Start workbench by running:
   - Click any step to see its details
   </Step>
 
-<Step>
-  ### Real-time Testing Test your flows directly in the interface: - Send test requests to API endpoints - Monitor how
-  events flow through steps - Visualize step sequence execution - Inspect data at each stage
-</Step>
-
-<Step>
-  ### Live Logs Monitor your flow execution: ``` [INFO] [payment-flow] Payment received: $50.00 [DEBUG] [payment-flow]
-  Processing payment... ```
-</Step>
+  <Step>
+  
+  ### Real-time Testing 
+  Test your flows directly in the interface: 
+  - Send test requests to API endpoints 
+  - Monitor how events flow through steps 
+  - Visualize step sequence execution 
+  - Inspect data at each stage
+  </Step>
 
   <Step>
-   ### Development Tools
+  
+  ### Live Logs 
+  Monitor your flow execution: 
+  ``` 
+  [INFO] [payment-flow] Payment received: $50.00 [DEBUG] [payment-flow]
+  Processing payment... 
+  ```
+  </Step>
+
+  <Step>
+   
+  ### Development Tools
   - **Hot Reload**: Changes reflect immediately in the UI
   - **Error Handling**: Detailed error messages with contextual debugging information
   - **State Inspector**: Real-time monitoring of state management

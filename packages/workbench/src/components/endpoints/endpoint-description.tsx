@@ -12,7 +12,7 @@ export const EndpointDescription: FC<Props> = ({ endpoint }) => {
     <div className="space-y-3">
       <EndpointPathParamsPanel endpoint={endpoint} />
       <EndpointQueryParamsPanel endpoint={endpoint} />
-      <EndpointBodyPanel endpoint={endpoint} />
+      <EndpointBodyPanel endpoint={endpoint} panelName="details" />
       <EndpointResponseSchema
         items={Object.entries(endpoint?.responseSchema ?? {}).map(([status, schema]) => ({
           responseCode: status,

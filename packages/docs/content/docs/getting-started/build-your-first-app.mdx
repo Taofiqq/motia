@@ -23,8 +23,7 @@ All connected automatically with zero configuration and strict type safety.
 # Create a new Motia app
 npx motia@latest create -i
 ```
-![Create App Command](/docs-images/motia-build-your-app-1.png)
-)
+![Create App Command](/docs-images/motia-build-your-app-1.gif)
 
 ```bash
 # Change directory to my-app
@@ -41,7 +40,23 @@ npx motia dev
 
 ✅ That's it! You now have a working Motia app with a visual debugger at `http://localhost:3000`
 
-## Step 2: Add Your Logic Steps
+## Step 2: Add Environment Variables (Optional)
+
+If you want to use external APIs, create a `.env` file:
+
+```bash title=".env"
+# Only add these if you need external services
+OPENAI_API_KEY=sk-your-api-key-here
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/your-webhook
+```
+
+<Callout type="info">
+The basic tutorial works without any API keys. Add environment variables only if you want to integrate external services.
+
+**➡️ [Learn about Environment Variables](/docs/concepts/environment-variables)**
+</Callout>
+
+## Step 3: Add Your Logic Steps
 
 ### TypeScript API Endpoint (App Starter)
 // File: 01-starter.step.ts

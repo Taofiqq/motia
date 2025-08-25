@@ -1,39 +1,5 @@
 [
   {
-    "id": "cron-example",
-    "config": {
-      "steps/cronExample/handlePeriodicJob.step.ts": {
-        "x": 0,
-        "y": 0
-      }
-    }
-  },
-  {
-    "id": "open-ai",
-    "config": {
-      "steps/open-ai-python/02-prompt.step.py": {
-        "x": 24,
-        "y": 232,
-        "targetHandlePosition": "left"
-      },
-      "steps/open-ai-python/01-prompt-api.step.py": {
-        "x": -338,
-        "y": 206,
-        "sourceHandlePosition": "right"
-      },
-      "steps/open-ai/02-prompt.step.ts": {
-        "x": 49,
-        "y": 70,
-        "targetHandlePosition": "left"
-      },
-      "steps/open-ai/01-prompt-api.step.ts": {
-        "x": -315,
-        "y": 44,
-        "sourceHandlePosition": "right"
-      }
-    }
-  },
-  {
     "id": "simple-python",
     "config": {
       "steps/simplePython/testedEvent.step.py": {
@@ -105,28 +71,108 @@
     }
   },
   {
+    "id": "open-ai",
+    "config": {
+      "steps/open-ai/02-prompt.step.ts": {
+        "x": 49,
+        "y": 70,
+        "targetHandlePosition": "left"
+      },
+      "steps/open-ai/01-prompt-api.step.ts": {
+        "x": -315,
+        "y": 44,
+        "sourceHandlePosition": "right"
+      },
+      "steps/open_ai_python/prompt_step.py": {
+        "x": 312,
+        "y": 264
+      },
+      "steps/open_ai_python/prompt_api_step.py": {
+        "x": 311,
+        "y": 0
+      }
+    }
+  },
+  {
+    "id": "cron-example",
+    "config": {
+      "steps/cronExample/periodicJobHandled.step.ts": {
+        "x": 0,
+        "y": 260
+      },
+      "steps/cronExample/handlePeriodicJob.step.ts": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
     "id": "default",
     "config": {
       "steps/default-node/03-check-state-change.step.ts": {
-        "x": 540,
-        "y": 305,
-        "targetHandlePosition": "left"
+        "x": 0,
+        "y": 0
       },
       "steps/default-node/02-test-state.step.ts": {
-        "x": 211,
-        "y": 306,
-        "sourceHandlePosition": "right",
-        "targetHandlePosition": "left"
+        "x": 0,
+        "y": 0
       },
       "steps/default-node/01-api.step.ts": {
-        "x": -116,
-        "y": 271,
+        "x": 0,
+        "y": 0
+      },
+      "steps/default-node/00-noop.step.ts": {
+        "x": 0,
+        "y": 0
+      }
+    }
+  },
+  {
+    "id": "basic-tutorial",
+    "config": {
+      "steps/basic-tutorial/state-audit-cron.step.ts": {
+        "x": -165,
+        "y": 217,
+        "sourceHandlePosition": "right"
+      },
+      "steps/basic-tutorial/process-food-order.step.ts": {
+        "x": 211,
+        "y": 17,
+        "sourceHandlePosition": "bottom",
+        "targetHandlePosition": "left"
+      },
+      "steps/basic-tutorial/api.step.ts": {
+        "x": -100,
+        "y": 3,
         "sourceHandlePosition": "right",
         "targetHandlePosition": "left"
       },
-      "steps/default-node/00-noop.step.ts": {
-        "x": -322,
-        "y": 291,
+      "steps/basic-tutorial/notification.step.ts": {
+        "x": 300,
+        "y": 264
+      }
+    }
+  },
+  {
+    "id": "python-tutorial",
+    "config": {
+      "steps/default_python/state_audit_cron_step.py": {
+        "x": -332,
+        "y": 149,
+        "sourceHandlePosition": "right"
+      },
+      "steps/default_python/process_food_order_step.py": {
+        "x": 81,
+        "y": -52,
+        "targetHandlePosition": "left"
+      },
+      "steps/default_python/notification_step.py": {
+        "x": 142,
+        "y": 175
+      },
+      "steps/default_python/api_step.py": {
+        "x": -302,
+        "y": -66,
         "sourceHandlePosition": "right"
       }
     }

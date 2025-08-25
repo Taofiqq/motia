@@ -18,7 +18,7 @@ export interface PanelAction {
 
 export interface PanelProps {
   'data-testid'?: string
-  title: ReactNode
+  title?: ReactNode
   subtitle?: ReactNode
   details?: PanelDetailItemProps[]
   actions?: PanelAction[]
@@ -28,6 +28,7 @@ export interface PanelProps {
   variant?: 'default' | 'outlined' | 'filled' | 'ghost'
   tabs?: {
     label: string
+    labelComponent?: ReactNode
     content: ReactNode
     'data-testid'?: string
   }[]
@@ -85,8 +86,13 @@ export const Panel: FC<PanelProps> = ({
             })}
           >
             {tabs?.map((tab) => (
-              <TabsTrigger key={tab.label} value={tab.label} data-testid={tab['data-testid']}>
-                {tab.label}
+              <TabsTrigger
+                key={tab.label}
+                value={tab.label}
+                data-testid={tab['data-testid']}
+                className="cursor-pointer"
+              >
+                {tab.labelComponent || tab.label}
               </TabsTrigger>
             ))}
           </TabsList>
@@ -131,43 +137,46 @@ export const Panel: FC<PanelProps> = ({
             'border-b-0': hasTabs,
           })}
         >
-          <div
-            className={cn('flex flex-col gap-1 px-5 py-4', {
-              'px-4 py-3': size === 'sm',
-              'px-5 py-4': size === 'md',
-              'pb-0': hasTabs,
-            })}
-          >
-            <div className="flex items-center w-full">
-              <div
-                className={cn(
-                  'font-semibold text-foreground tracking-[-0.25px] leading-tight flex-1',
-                  size === 'sm' ? 'text-xs' : 'text-base',
-                )}
-              >
-                {title}
-              </div>
-              {actions && actions.length > 0 && (
-                <div className="flex items-center gap-1">
-                  {actions.map((action, index) => (
-                    <Button
-                      key={index}
-                      onClick={action.onClick}
-                      variant="ghost"
-                      className={cn(action.active && 'bg-muted-foreground/20 hover:bg-muted-foreground/30')}
-                      size="icon"
-                      aria-label={action.label}
-                    >
-                      {action.icon}
-                    </Button>
-                  ))}
+          {title && (
+            <div
+              className={cn('flex flex-col gap-1 px-5 py-4', {
+                'px-4 py-3': size === 'sm',
+                'px-5 py-4': size === 'md',
+                'pb-0': hasTabs,
+              })}
+            >
+              <div className="flex items-center w-full">
+                <div
+                  className={cn(
+                    'font-semibold text-foreground tracking-[-0.25px] leading-tight flex-1',
+                    size === 'sm' ? 'text-xs' : 'text-base',
+                  )}
+                >
+                  {title}
                 </div>
+                {actions && actions.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    {actions.map((action, index) => (
+                      <Button
+                        key={index}
+                        onClick={action.onClick}
+                        variant="ghost"
+                        className={cn(action.active && 'bg-muted-foreground/20 hover:bg-muted-foreground/30')}
+                        size="icon"
+                        aria-label={action.label}
+                        data-testid="close-panel"
+                      >
+                        {action.icon}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {subtitle && (
+                <p className="text-sm font-medium text-muted-foreground tracking-[-0.25px] leading-tight">{subtitle}</p>
               )}
             </div>
-            {subtitle && (
-              <p className="text-sm font-medium text-muted-foreground tracking-[-0.25px] leading-tight">{subtitle}</p>
-            )}
-          </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-auto">{content}</div>

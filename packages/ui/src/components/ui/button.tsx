@@ -5,11 +5,11 @@ import { ButtonHTMLAttributes, forwardRef } from 'react'
 import { cn } from '../../lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
+  'inline-flex items-center cursor-pointer justify-center gap-2 whitespace-nowrap rounded-md font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
   {
     variants: {
       variant: {
-        default: 'bg-secondary text-secondary-foreground hover:bg-input active:bg-secondary',
+        default: 'bg-input text-foreground hover:bg-border active:bg-card',
         accent: 'bg-accent text-accent-foreground hover:bg-accent/90 active:bg-accent/80',
         light: 'bg-background text-foreground border border-border hover:bg-muted active:bg-muted/80',
         secondary: 'bg-secondary text-foreground shadow-sm hover:opacity-90 active:opacity-80',

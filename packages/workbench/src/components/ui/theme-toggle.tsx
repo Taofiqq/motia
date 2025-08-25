@@ -1,7 +1,7 @@
 import { Moon, Sun } from 'lucide-react'
-import { useThemeStore } from '@/stores/use-theme-store'
+import { Theme, useThemeStore } from '@/stores/use-theme-store'
 import { cn } from '@/lib/utils'
-import React from 'react'
+import React, { useEffect } from 'react'
 
 export const ThemeToggle: React.FC = () => {
   const theme = useThemeStore((state) => state.theme)
@@ -10,6 +10,14 @@ export const ThemeToggle: React.FC = () => {
   const toggleTheme = () => {
     setTheme(theme === 'light' ? 'dark' : 'light')
   }
+
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    const colorScheme = url.searchParams.get('color-scheme') as Theme
+    if (colorScheme) {
+      setTheme(colorScheme)
+    }
+  }, [setTheme])
 
   return (
     <button

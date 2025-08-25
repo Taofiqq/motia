@@ -6,6 +6,7 @@ const withMDX = createMDX()
 const config = {
   reactStrictMode: false,
   turbopack: true,
+  serverExternalPackages: ['typescript', 'twoslash'],
   async rewrites() {
     return [
       {

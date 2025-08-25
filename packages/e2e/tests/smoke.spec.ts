@@ -10,6 +10,9 @@ test.describe('CLI Generated Project - Smoke Tests', () => {
     motiaApp = new MotiaApplicationPage(page)
     workbench = new WorkbenchPage(page)
     api = new ApiHelpers(page)
+    await page.addInitScript(() => {
+      localStorage.setItem('motia-tutorial-closed', 'true')
+    })
   })
 
   test('CLI generated project loads successfully', async ({ page }) => {

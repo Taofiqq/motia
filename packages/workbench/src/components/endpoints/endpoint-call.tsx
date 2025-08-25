@@ -71,7 +71,7 @@ export const EndpointCall: FC<Props> = ({ endpoint }) => {
     <div className="space-y-3">
       <EndpointPathParamsPanel endpoint={endpoint} onChange={setPathParamsValues} />
       <EndpointQueryParamsPanel endpoint={endpoint} onChange={setQueryParamsValues} />
-      <EndpointBodyPanel endpoint={endpoint} onChange={setBody} onValidate={setIsBodyValid} />
+      <EndpointBodyPanel endpoint={endpoint} onChange={setBody} onValidate={setIsBodyValid} panelName="call" />
       <Button
         className="w-fit"
         onClick={handleRequest}

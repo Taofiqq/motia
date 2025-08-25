@@ -1,29 +1,18 @@
 import path from 'path'
 import fs from 'fs'
-import { templates } from './templates'
 import { executeCommand } from '../utils/execute-command'
 import { pythonInstall } from '../install'
 import { generateTypes } from '../generate-types'
 import { version } from '../version'
 import { CliContext } from '../cloud/config-utils'
+import { setupTemplate } from './setup-template'
+import { checkIfFileExists, checkIfDirectoryExists } from './utils'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('ts-node').register({
   transpileOnly: true,
   compilerOptions: { module: 'commonjs' },
 })
-
-const checkIfFileExists = (dir: string, fileName: string): boolean => {
-  return fs.existsSync(path.join(dir, fileName))
-}
-
-const checkIfDirectoryExists = (dir: string): boolean => {
-  try {
-    return fs.statSync(dir).isDirectory()
-  } catch {
-    return false
-  }
-}
 
 const getPackageManager = (dir: string): string => {
   if (checkIfFileExists(dir, 'yarn.lock')) {
@@ -104,6 +93,7 @@ type Args = {
   template?: string
   cursorEnabled?: boolean
   context: CliContext
+  skipTutorialTemplates?: boolean
 }
 
 export const create = async ({ projectName, template, cursorEnabled, context }: Args): Promise<void> => {
@@ -238,42 +228,13 @@ export const create = async ({ projectName, template, cursorEnabled, context }: 
     )
   }
 
-  const stepsDir = path.join(rootDir, 'steps')
-  if (!checkIfDirectoryExists(stepsDir)) {
-    fs.mkdirSync(stepsDir)
-    context.log('steps-directory-created', (message) =>
-      message.tag('success').append('Folder').append('steps', 'cyan').append('has been created.'),
-    )
+  if (template) {
+    await setupTemplate(template, rootDir, context)
   }
-
-  if (!template || !(template in templates)) {
-    context.log('template-not-found', (message) =>
-      message.tag('failed').append(`Template ${template} not found, please use one of the following:`),
-    )
-    context.log('available-templates', (message) =>
-      message.tag('info').append(`Available templates: \n\n ${Object.keys(templates).join('\n')}`),
-    )
-
-    return
-  }
-
-  await templates[template](rootDir, context)
 
   const packageManager = await installNodeDependencies(rootDir, context)
 
   if (template === 'python') {
-    if (!checkIfFileExists(rootDir, 'requirements.txt')) {
-      const requirementsContent = [
-        // TODO: motia PyPi package
-        // Add other Python dependencies as needed
-      ].join('\n')
-
-      fs.writeFileSync(path.join(rootDir, 'requirements.txt'), requirementsContent)
-      context.log('requirements-txt-created', (message) =>
-        message.tag('success').append('File').append('requirements.txt', 'gray').append('has been created.'),
-      )
-    }
-
     await pythonInstall({ baseDir: rootDir })
   }
 

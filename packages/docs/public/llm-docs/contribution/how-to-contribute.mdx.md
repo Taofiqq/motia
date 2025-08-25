@@ -34,6 +34,6 @@ If you have built something interesting with Motia or have a real-world use case
 
 ## Spreading the Word
 
-Help spread the word about Motia by sharing it with your friends, colleagues, and the developer community. You can also star our [GitHub repository](https://github.com/MotiaDev/motia), follow us on [Twitter](https://twitter.com/motiadev), and join our [Discord community](https://discord.gg/nJFfsH5d6v) to stay updated with the latest news and engage with other Motia developers.
+Help spread the word about Motia by sharing it with your friends, colleagues, and the developer community. You can also star our [GitHub repository](https://github.com/MotiaDev/motia), follow us on [Twitter](https://twitter.com/motiadev), and join our [Discord community](https://discord.gg/EnfDRFYW) to stay updated with the latest news and engage with other Motia developers.
 
 We appreciate all forms of contributions and look forward to collaborating with you to make Motia even better! 

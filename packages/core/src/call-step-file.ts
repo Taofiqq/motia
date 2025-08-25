@@ -3,7 +3,7 @@ import { trackEvent } from './analytics/utils'
 import { Motia } from './motia'
 import { ProcessManager } from './process-communication/process-manager'
 import { Event, Step } from './types'
-import { BaseStreamItem } from './types-stream'
+import { BaseStreamItem, StateStreamEvent, StateStreamEventChannel } from './types-stream'
 import { isAllowedToEmit } from './utils'
 import { Logger } from './logger'
 import { Tracer } from './observability'
@@ -15,6 +15,7 @@ type StateDeleteInput = { traceId: string; key: string }
 type StateClearInput = { traceId: string }
 
 type StateStreamGetInput = { groupId: string; id: string }
+type StateStreamSendInput = { channel: StateStreamEventChannel; event: StateStreamEvent<unknown> }
 type StateStreamMutateInput = { groupId: string; id: string; data: BaseStreamItem }
 
 const getLanguageBasedRunner = (
@@ -170,6 +171,11 @@ export const callStepFile = <TData>(options: CallStepFileOptions, motia: Motia):
           processManager.handler<StateStreamGetInput>(`streams.${name}.getGroup`, async (input) => {
             tracer.streamOperation(name, 'getGroup', input)
             return stateStream.getGroup(input.groupId)
+          })
+
+          processManager.handler<StateStreamSendInput>(`streams.${name}.send`, async (input) => {
+            tracer.streamOperation(name, 'send', input)
+            return stateStream.send(input.channel, input.event)
           })
         })
 
