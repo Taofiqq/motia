@@ -3,10 +3,10 @@ from datetime import datetime, timezone
 config = {
     "type": "cron",
     "cron": "*/5 * * * *",  # run every 5 minutes
-    "name": "PythonStateAuditJob",
+    "name": "StateAuditJob",
     "description": "Checks the state for orders that are not complete and have a ship date in the past",
-    "emits": ["python-notification"],
-    "flows": ["python-tutorial"],
+    "emits": ["notification"],
+    "flows": ["basic-tutorial"],
 }
 
 async def handler(context):
@@ -25,7 +25,7 @@ async def handler(context):
             })
 
             await context.emit({
-                "topic": "python-notification",
+                "topic": "notification",
                 "data": {
                     "email": "test@test.com",
                     "template_id": "order-audit-warning",

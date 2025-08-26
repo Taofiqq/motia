@@ -3,6 +3,10 @@ import { Page, expect } from '@playwright/test'
 export class TestHelpers {
   constructor(private page: Page) {}
 
+  async skipTutorial() {
+    await this.page.addInitScript(() => localStorage.setItem('motia-tutorial-closed', 'true'))
+  }
+
   async waitForMotiaApplication() {
     await this.page.waitForLoadState('networkidle')
     await expect(this.page.locator('body')).toBeVisible()
@@ -34,17 +38,11 @@ export class TestHelpers {
   }
 
   async waitForStepExecution(stepName: string, timeout: number = 30000) {
-    await this.page.waitForSelector(
-      `[data-testid="step-${stepName}"][data-status="completed"]`,
-      { timeout }
-    )
+    await this.page.waitForSelector(`[data-testid="step-${stepName}"][data-status="completed"]`, { timeout })
   }
 
   async waitForFlowCompletion(flowName: string, timeout: number = 60000) {
-    await this.page.waitForSelector(
-      `[data-testid="flow-${flowName}"][data-status="completed"]`,
-      { timeout }
-    )
+    await this.page.waitForSelector(`[data-testid="flow-${flowName}"][data-status="completed"]`, { timeout })
   }
 
   async takeScreenshotOnFailure(testName: string) {
@@ -86,17 +84,17 @@ export class TestHelpers {
     const flowLink = this.page.getByTestId(`flow-${flowName}-link`)
     await flowLink.click()
     await this.page.waitForLoadState('networkidle')
-    
+
     // Click start flow button
     const startButton = this.page.getByTestId('start-flow-button')
     await startButton.click()
-    
+
     // Wait for execution
     await this.page.waitForTimeout(3000)
-    
+
     // Navigate to logs
     const logsLink = this.page.getByTestId('logs-link')
     await logsLink.click()
     await this.page.waitForLoadState('networkidle')
   }
-} 
+}

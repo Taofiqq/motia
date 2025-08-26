@@ -27,7 +27,7 @@ export const steps: TutorialStep[] = [
   // Flows
 
   {
-    elementXpath: workbenchXPath.flows.node('pythonapitrigger'),
+    elementXpath: workbenchXPath.flows.node('apitrigger'),
     title: 'API Step',
     link: 'https://www.motia.dev/docs/concepts/steps/api',
     description: () => (
@@ -38,11 +38,11 @@ export const steps: TutorialStep[] = [
     ),
     before: [
       { type: 'click', selector: workbenchXPath.links.flows },
-      { type: 'click', selector: workbenchXPath.flows.dropdownFlow('python-tutorial') },
+      { type: 'click', selector: workbenchXPath.flows.dropdownFlow('basic-tutorial') },
     ],
   },
   {
-    elementXpath: workbenchXPath.flows.previewButton('pythonapitrigger'),
+    elementXpath: workbenchXPath.flows.previewButton('apitrigger'),
     title: 'Code Preview',
     description: () => <p>Clicking on this icon will allow you to visualize the source code for a given Step.</p>,
     before: [
@@ -81,7 +81,7 @@ export const steps: TutorialStep[] = [
       </div>
     ),
     before: [
-      { type: 'click', selector: workbenchXPath.flows.previewButton('pythonapitrigger') },
+      { type: 'click', selector: workbenchXPath.flows.previewButton('apitrigger') },
       { type: 'click', selector: workbenchXPath.flows.feature('step-configuration') },
     ],
   },
@@ -195,7 +195,7 @@ export const steps: TutorialStep[] = [
   // Event Steps
 
   {
-    elementXpath: workbenchXPath.flows.node('pythonprocessfoodorder'),
+    elementXpath: workbenchXPath.flows.node('processfoodorder'),
     title: 'Event Step',
     link: 'https://www.motia.dev/docs/concepts/steps/event',
     description: () => (
@@ -229,7 +229,7 @@ export const steps: TutorialStep[] = [
       </p>
     ),
     before: [
-      { type: 'click', selector: workbenchXPath.flows.previewButton('pythonprocessfoodorder') },
+      { type: 'click', selector: workbenchXPath.flows.previewButton('processfoodorder') },
       { type: 'click', selector: workbenchXPath.flows.feature('step-configuration') },
     ],
   },
@@ -289,7 +289,7 @@ export const steps: TutorialStep[] = [
   // Cron Steps
 
   {
-    elementXpath: workbenchXPath.flows.node('pythonstateauditjob'),
+    elementXpath: workbenchXPath.flows.node('stateauditjob'),
     title: 'Cron Step',
     link: 'https://www.motia.dev/docs/concepts/steps/cron',
     description: () => (
@@ -322,7 +322,7 @@ export const steps: TutorialStep[] = [
       </p>
     ),
     before: [
-      { type: 'click', selector: workbenchXPath.flows.previewButton('pythonstateauditjob') },
+      { type: 'click', selector: workbenchXPath.flows.previewButton('stateauditjob') },
       { type: 'click', selector: workbenchXPath.flows.feature('cron-configuration') },
     ],
   },
@@ -361,7 +361,7 @@ export const steps: TutorialStep[] = [
     before: [{ type: 'click', selector: workbenchXPath.closePanelButton }],
   },
   {
-    elementXpath: workbenchXPath.endpoints.endpoint('POST', '/python-basic-tutorial'),
+    elementXpath: workbenchXPath.endpoints.endpoint('POST', '/basic-tutorial'),
     title: 'Endpoints Tool',
     description: () => (
       <p>
@@ -387,7 +387,7 @@ export const steps: TutorialStep[] = [
         endpoint in the <b>Call</b> Tab.
       </p>
     ),
-    before: [{ type: 'click', selector: workbenchXPath.endpoints.endpoint('POST', '/python-basic-tutorial') }],
+    before: [{ type: 'click', selector: workbenchXPath.endpoints.endpoint('POST', '/basic-tutorial') }],
   },
   {
     elementXpath: workbenchXPath.endpoints.callPanel,
@@ -406,12 +406,12 @@ export const steps: TutorialStep[] = [
         <br />
         <pre className="code-preview">
           <code className="language-bash">
-            curl -X POST http://localhost:3000/python-basic-tutorial \<br />
+            curl -X POST http://localhost:3000/basic-tutorial \<br />
             {'  '}-H "Content-Type: application/json" \<br />
             {'  '}-d '
             {JSON.stringify({
-              pet: { name: 'Jack', photo_url: 'https://images.dog.ceo/breeds/pug/n02110958_13560.jpg' },
-              food_order: { id: 'food-order-1', quantity: 0 },
+              pet: { name: 'Jack', photoUrl: 'https://images.dog.ceo/breeds/pug/n02110958_13560.jpg' },
+              foodOrder: { id: 'food-order-1', quantity: 0 },
             })}
             '
           </code>
@@ -433,8 +433,8 @@ export const steps: TutorialStep[] = [
       {
         type: 'fill-editor',
         content: {
-          pet: { name: 'Jack', photo_url: 'https://images.dog.ceo/breeds/pug/n02110958_13560.jpg' },
-          food_order: { id: 'food-order-1', quantity: 0 },
+          pet: { name: 'Jack', photoUrl: 'https://images.dog.ceo/breeds/pug/n02110958_13560.jpg' },
+          foodOrder: { id: 'food-order-1', quantity: 0 },
         },
       },
     ],
@@ -611,7 +611,7 @@ export const steps: TutorialStep[] = [
         <br />
         <br />
         We recommend you give our{' '}
-        <a href="https://www.motia.dev/docs/getting-started/core-concepts" target="_blank">
+        <a href="https://www.motia.dev/docs/concepts" target="_blank">
           core concepts
         </a>{' '}
         a read if you wish to learn further about Motia's fundamentals.

@@ -10,11 +10,11 @@ class InputSchema(BaseModel):
 
 config = {
     "type": "event",
-    "name": "PythonProcessFoodOrder",
+    "name": "ProcessFoodOrder",
     "description": "basic-tutorial event step, demonstrates how to consume an event from a topic and persist data in state",
-    "flows": ["python-tutorial"],
-    "subscribes": ["python-process-food-order"],
-    "emits": ["python-notification"],
+    "flows": ["basic-tutorial"],
+    "subscribes": ["process-food-order"],
+    "emits": ["notification"],
     "input": InputSchema.model_json_schema(),
 }
 
@@ -35,7 +35,7 @@ async def handler(input_data, context):
     await context.state.set("orders_python", order.get("id"), order)
 
     await context.emit({
-        "topic": "python-notification",
+        "topic": "notification",
         "data": {
             "email": input_data["email"],
             "template_id": "new-order",

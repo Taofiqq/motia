@@ -1,13 +1,9 @@
 {
-  "title": "Getting Started",
+  "title": "Getting Started", 
   "defaultOpen": true,
   "pages": [
-    "quick-start", 
-    "project-structure",
+    "quick-start",
     "build-your-first-app",
-    "build-your-first-background-jobs",
-    "prerequisites",
-    "build-your-first-api",
-    "core-concepts"
+    "build-your-first-background-jobs"
   ]
 }

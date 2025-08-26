@@ -6,7 +6,7 @@ class PetStoreService:
     async def create_pet(self, pet: Dict[str, Any]) -> Pet:
         pet_data = {
             "name": pet.get("name", ""),
-            "photoUrls": [pet.get("photo_url", "")],
+            "photoUrls": [pet.get("photoUrl", "")],
             "status": "available"
         }
         

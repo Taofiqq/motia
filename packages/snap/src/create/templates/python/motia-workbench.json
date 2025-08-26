@@ -1,6 +1,6 @@
 [
   {
-    "id": "python-tutorial",
+    "id": "basic-tutorial",
     "config": {
       "steps/state_audit_cron_step.py": {
         "x": -38,

@@ -9,10 +9,10 @@ class InputSchema(BaseModel):
 
 config = {
     "type": "event",
-    "name": "PythonNotification",
+    "name": "Notification",
     "description": "Checks a state change",
-    "flows": ["python-tutorial"],
-    "subscribes": ["python-notification"],
+    "flows": ["basic-tutorial"],
+    "subscribes": ["notification"],
     "emits": [],
     "input": InputSchema.model_json_schema(),
 }
