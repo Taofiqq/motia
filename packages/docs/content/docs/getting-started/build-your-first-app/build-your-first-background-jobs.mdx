@@ -41,9 +41,9 @@ This architecture keeps your API fast while ensuring pets get proper ongoing car
 
 ## Step 1: Add Event Emission to Your Pet API
 
-First, we need to modify your existing `POST /pets` endpoint from Tutorial 1 to emit events when pets are created. This will trigger the background jobs.
+First, we need to modify the existing `POST /pets` endpoint from [REST API Tutorial](./build-your-first-app) to add logger and emit events when pets are created. This will trigger the background jobs.
 
-Open your existing **`steps/create-pet.step.ts`** file and update it:
+Open the existing **`steps/create-pet.step.ts`** file and update it:
 
 <Tabs items={['TS', 'JS', 'Python']}>
   <Tab value="TS">
@@ -213,13 +213,9 @@ Open your existing **`steps/create-pet.step.ts`** file and update it:
 </Tabs>
 
 The key changes are:
-- Added `emits: ['pet-created']` to the configuration
+- Added `emits: ['pet-created']` prop to the configuration
 - Added `emit` to the handler parameters  
 - Added `await emit()` call after creating the pet
-
-Now when you create a pet, your API will emit a `pet-created` event that background jobs can listen for.
-
-![Get All Pets](./../../img/pet-background-logger.png)
 
 ## Step 2: Create the Adoption Follow-up Background Job
 
@@ -331,14 +327,14 @@ This event step demonstrates how background jobs work:
 - **Simulates real tasks** - Logs welcome message and care package preparation
 - **No external dependencies** - Uses only Motia's built-in logging
 
-When you create a pet via the API, you'll see these welcome messages appear in your logs automatically.
+When you create a pet via the API, you'll see the adoption welcome message and welcome care package logs appear automatically.
 
-Adoption Followup Message
-![Get All Pets](./../../img/adoption-followup.png)
+Open your development server in the browser, click the `Endpoint` tab, and use the 'POST /pets' endpoint to create a pet.
+![Create Pet for Background Job](./../../img/create-pet-background-job.png)
 
-Welcome Care Package
-![Get All Pets](./../../img/welcome-care-package.png)
-
+Once you send the request, you'll see the adoption welcome message appear in the `Logs` tab, followed by the welcome care package confirmation.
+![Adoption Followup Message](./../../img/adoption-followup-message.png)
+![Welcome Care Package](./../../img/welcome-care-package.png)
 
 ## Step 3: Create Daily Feeding Reminders
 
@@ -490,11 +486,17 @@ This cron step demonstrates scheduled job patterns:
 
 This job will run automatically every morning, ensuring all pets get their daily feeding reminders.
 
+For testing purposes in this tutorial, you can temporarily modify the cron expression to run more frequently. Change `'0 8 * * *'` to `'* * * * *'` to run every minute, allowing you to see the job execute immediately. Remember to change it back to the daily schedule once you've verified it works correctly.
+
+Once you change it to run every minute, wait in the Workbench for about one minute and you'll see the daily feeding reminder logs appear in the logs tab. You should see logs for each pet with their specific feeding schedules and care instructions.
+
+After confirming the cron job works correctly, change the expression back to `'0 8 * * *'` for production use.
+
 Daily Notification Job starting
-![Get All Pets](./../../img/daily-pet-reminder-one.png)
+![Get All Pets](./../../img/daily-feeding-job-completion.png)
 
 Daily Notification Job completion
-![Get All Pets](./../../img/daily-pet-reminder-two.png)
+![Get All Pets](./../../img/daily-feeding-reminder-start.png)
 
 
 ## Step 4: Create Weekly Grooming Notifications
@@ -721,11 +723,15 @@ This weekly cron step shows more advanced scheduling:
 
 This job ensures all pets get appropriate grooming reminders based on their specific needs.
 
+To test this weekly job immediately, temporarily change the cron expression from `'0 9 * * 1'` to `'* * * * *'` to run every minute. Wait about one minute in the Workbench and you'll see grooming reminder logs appear for each pet, with breed-specific grooming tasks and schedules.
+
+Remember to revert the cron back to `'0 9 * * 1'` for the proper weekly Monday schedule after testing.
+
 Weekly Notification Job starting
-![Get All Pets](./../../img/weekly-pet-reminder-one.png)
+![Get All Pets](./../../img/weekly-grooming-start.png)
 
 Weekly Notification Job completion
-![Get All Pets](./../../img/weekly-pet-reminder-two.png)
+![Get All Pets](./../../img/weekly-grooming-completion.png)
 
 ## Step 5: Create Monthly Vet Checkup Alerts
 
@@ -1003,10 +1009,22 @@ This monthly cron step demonstrates the most complex scheduling pattern:
 - **Urgency levels** - Different pets have different health priorities
 - **Comprehensive logging** - Includes month context and detailed health recommendations
 
+This ensures all pets receive appropriate veterinary care based on their age and breed characteristics.
+
+To test this monthly job immediately, temporarily change the cron expression from `'0 10 1 * *'` to `'* * * * *'` to run every minute. Wait about one minute in the Workbench and you'll see vet checkup reminder logs appear for each pet, with age-appropriate health recommendations and urgency levels.
+
+Remember to revert the cron back to `'0 10 1 * *'` for the proper monthly schedule after testing.
+
 Monthly Notification Job starting
-![Get All Pets](./../../img/monthly-pet-reminder-one.png)
+![Get All Pets](./../../img/monthly-vet-reminder-start.png)
 
 Monthly Notification Job completion
-![Get All Pets](./../../img/monthly-pet-reminder-two.png)
+![Get All Pets](./../../img/monthly-vet-reminder-completion.png)
 
-This ensures all pets receive appropriate veterinary care based on their age and breed characteristics.
+You've successfully transformed your pet store REST API into an intelligent, automated system. Your background jobs now work seamlessly with your API endpoints - when someone creates a pet through `POST /pets`, the adoption follow-up job runs automatically. Meanwhile, your scheduled jobs ensure ongoing pet care with daily feeding reminders, weekly grooming notifications, and monthly vet checkups.
+
+This event-driven architecture keeps your API responses fast while handling time-consuming tasks in the background. Your pet store now provides comprehensive care automation without blocking user requests.
+
+### Next Steps
+
+Ready to take your pet store further? In the next tutorial, you'll learn how to build complex multi-step workflows that handle complex business processes like pet adoption applications, complete with background checks, home visits, and approval decisions that span multiple days.
