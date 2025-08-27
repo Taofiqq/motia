@@ -330,7 +330,6 @@ This event step demonstrates how background jobs work:
 When you create a pet via the API, you'll see the adoption welcome message and welcome care package logs appear automatically.
 
 Open your development server in the browser, click the `Endpoint` tab, and use the 'POST /pets' endpoint to create a pet.
-![Create Pet for Background Job](./../../img/create-pet-background-job.png)
 
 Once you send the request, you'll see the adoption welcome message appear in the `Logs` tab, followed by the welcome care package confirmation.
 ![Adoption Followup Message](./../../img/adoption-followup-message.png)
@@ -492,12 +491,14 @@ Once you change it to run every minute, wait in the Workbench for about one minu
 
 After confirming the cron job works correctly, change the expression back to `'0 8 * * *'` for production use.
 
-Daily Notification Job starting
-![Get All Pets](./../../img/daily-feeding-job-completion.png)
+![Cron Node Daily Notification](./../../img/daily-feeding-reminder-cron-flow.png)
+When you modify the cron to run every minute, you'll see the DailyFeedingReminder job appear in the Workbench with all three scheduled jobs visible. The logs will show "Starting daily feeding reminder job" as the process begins.
 
-Daily Notification Job completion
-![Get All Pets](./../../img/daily-feeding-reminder-start.png)
+![Daily Pets Cron Job](./../../img/daily-pet-cron-job-details.png)
+Click on any log entry to see the detailed feeding information for each pet. The logs show structured data including pet details, feeding schedules, and care instructions. Notice how different pets receive customized feeding schedules based on their breed - cats get 2 meals per day while dogs get 3 meals per day.
 
+![Daily Feeding Reminder Job Completion](./../../img/daily-pet-feeding-completion.png)
+The final log entry shows the job completion summary with the total number of pets processed and reminders sent. This confirms all pets in your store received their daily feeding reminders successfully.
 
 ## Step 4: Create Weekly Grooming Notifications
 
@@ -727,11 +728,14 @@ To test this weekly job immediately, temporarily change the cron expression from
 
 Remember to revert the cron back to `'0 9 * * 1'` for the proper weekly Monday schedule after testing.
 
-Weekly Notification Job starting
-![Get All Pets](./../../img/weekly-grooming-start.png)
+![Cron Job Node Weekly Grooming](./../../img/weekly-notification-job-node.png)
+Once you modify the cron to run every minute, the WeeklyGroomingReminder job will activate and appear in the Workbench alongside your other scheduled jobs. You'll see "Starting weekly grooming reminder job" in the logs as the system begins processing grooming notifications for all pets.
 
-Weekly Notification Job completion
-![Get All Pets](./../../img/weekly-grooming-completion.png)
+As the job executes, detailed grooming logs will appear showing breed-specific care recommendations. Click on any log entry to see the complete grooming details. For example, Buddy the Golden Retriever receives specific grooming tasks including brushing, bathing, and nail clipping, with a recommended frequency of "Every 6-8 weeks" and scheduling advice to "Schedule within next 7 days."
+![Pet Weekly Grooming Reminder](./../../img/weekly-pet-notification-reminder.png)
+
+![Pet Weekly Grooming Summary](./../../img/weekly-pet-summary.png)
+The completion log displays the final summary showing "totalPets: 4" and "remindersApproved: 4", confirming that all four pets in your store received their weekly grooming notifications successfully.
 
 ## Step 5: Create Monthly Vet Checkup Alerts
 
@@ -1015,11 +1019,14 @@ To test this monthly job immediately, temporarily change the cron expression fro
 
 Remember to revert the cron back to `'0 10 1 * *'` for the proper monthly schedule after testing.
 
-Monthly Notification Job starting
-![Get All Pets](./../../img/monthly-vet-reminder-start.png)
+![Monthly Pet Reminder Node](./../../img/monthly-vet-reminder-node.png)
+After you modify the cron to run every minute, the MonthlyVetReminder job will begin executing and you'll see it highlighted in the Workbench alongside the other background jobs. The logs will show "Starting monthly vet checkup reminder job" indicating the veterinary assessment process has commenced.
 
-Monthly Notification Job completion
-![Get All Pets](./../../img/monthly-vet-reminder-completion.png)
+![Monthly Pet Reminder Details](./../../img/monthly-pet-reminder-details.png)
+Click on any log entry to view the comprehensive vet checkup details for each pet. The logs show age-appropriate health recommendations - for example, Buddy (age 3) receives "standard wellness checkup" advice including general exam, vaccinations, heartworm test, and dental assessment, with scheduling guidance to "Book appointment within next 2 weeks" and the current month noted as "August 2025."
+
+![Monthly Pet Reminder Completion](./../../img/monthly-vet-reminder-completion.png)
+The final completion log displays "totalPets: 5" and "remindersApproved: 5" with the month "August 2025", confirming that all five pets in your store received their monthly veterinary checkup reminders with appropriate health monitoring guidance.
 
 You've successfully transformed your pet store REST API into an intelligent, automated system. Your background jobs now work seamlessly with your API endpoints - when someone creates a pet through `POST /pets`, the adoption follow-up job runs automatically. Meanwhile, your scheduled jobs ensure ongoing pet care with daily feeding reminders, weekly grooming notifications, and monthly vet checkups.
 
