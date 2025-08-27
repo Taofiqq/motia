@@ -11,9 +11,9 @@ Now we'll extend your pet store API to handle these ongoing tasks automatically 
 
 Before we start building, let's cover the key concepts for adding background jobs to your pet store API:
 
-- **Event Step** – A step that listens for specific events (like "pet-created") and processes tasks asynchronously when those events occur.
-- **Cron Step** – A step that runs on a schedule (daily, weekly, monthly) to handle recurring tasks like sending reminders.
-- **Event Emission** – How your API steps trigger background jobs by emitting events after completing their main task.
+- **Event Step** – A Step that listens for specific events (like "pet-created") and processes tasks asynchronously when those events occur.
+- **Cron Step** – A Step that runs on a schedule (daily, weekly, monthly) to handle recurring tasks like sending reminders.
+- **Event Emission** – How your API Steps trigger background jobs by emitting events after completing their main task.
 - **Job Scheduling** – Using cron expressions to define when scheduled jobs should run (e.g., every day at 8 AM).
 - **Simulated Notifications** – Logging structured messages that represent real-world notifications without external dependencies.
 
@@ -219,7 +219,7 @@ The key changes are:
 
 ## Step 2: Create the Adoption Follow-up Background Job
 
-Now let's create an event step that listens for the `pet-created` event and sends a welcome message to the new pet owner.
+Now let's create an Event Step that listens for the `pet-created` event and sends a welcome message to the new pet owner.
 
 Create a new file for the adoption follow-up job:
 
@@ -235,6 +235,13 @@ Create a new file for the adoption follow-up job:
       name: 'AdoptionFollowUp',
       description: 'Send welcome message when a pet is created',
       subscribes: ['pet-created'],
+      emits: [],
+      input: z.object({
+        id: z.string(),
+        name: z.string(),
+        breed: z.string(),
+        age: z.number(),
+      }),
     }
 
     export const handler: Handlers['AdoptionFollowUp'] = async (input, { logger }) => {
@@ -264,6 +271,14 @@ Create a new file for the adoption follow-up job:
       name: 'AdoptionFollowUp',
       description: 'Send welcome message when a pet is created',
       subscribes: ['pet-created'],
+      emits: [],
+      input: z.object({
+        id: z.string(),
+        name: z.string(),
+        breed: z.string(),
+        age: z.number(),
+      }),
+      
     }
 
     exports.handler = async (input, { logger }) => {
@@ -294,7 +309,14 @@ Create a new file for the adoption follow-up job:
         'type': 'event',
         'name': 'AdoptionFollowUp',
         'description': 'Send welcome message when a pet is created',
-        'subscribes': ['pet-created']
+        'subscribes': ['pet-created'],
+        'emits': [],
+        'input': {
+            'id': str,
+            'name': str,
+            'breed': str,
+            'age': int
+        }
     }
 
     async def handler(input_data, context):
@@ -321,7 +343,7 @@ Create a new file for the adoption follow-up job:
   </Tab>
 </Tabs>
 
-This event step demonstrates how background jobs work:
+This Event Step demonstrates how background jobs work:
 - **Subscribes to `pet-created`** - Automatically runs when the API emits this event
 - **Processes immediately** - Runs as soon as a pet is created
 - **Simulates real tasks** - Logs welcome message and care package preparation
@@ -337,7 +359,7 @@ Once you send the request, you'll see the adoption welcome message appear in the
 
 ## Step 3: Create Daily Feeding Reminders
 
-Now let's create a cron step that runs every day to remind pet owners about feeding their pets.
+Now let's create a Cron Step that runs every day to remind pet owners about feeding their pets.
 
 Create a new file for the daily feeding reminders:
 
@@ -352,7 +374,8 @@ Create a new file for the daily feeding reminders:
       type: 'cron',
       name: 'DailyFeedingReminder',
       description: 'Send daily feeding reminders for all pets',
-      cron: '* * * * *', // Every day at 8:00 AM
+      cron: "0 8 * * *", // Every day at 8:00 AM
+      flows: ["background-jobs"],
     }
 
     export const handler: Handlers['DailyFeedingReminder'] = async ({ logger, state }) => {
@@ -396,6 +419,7 @@ Create a new file for the daily feeding reminders:
       name: 'DailyFeedingReminder',
       description: 'Send daily feeding reminders for all pets',
       cron: '0 8 * * *', // Every day at 8:00 AM
+      flows: ["background-jobs"],
     }
 
     exports.handler = async ({ logger, state }) => {
@@ -439,7 +463,8 @@ Create a new file for the daily feeding reminders:
         'type': 'cron',
         'name': 'DailyFeedingReminder',
         'description': 'Send daily feeding reminders for all pets',
-        'cron': '0 8 * * *'  # Every day at 8:00 AM
+        'cron': '0 8 * * *',  # Every day at 8:00 AM
+        'flows': ["background-jobs"]
     }
 
     async def handler(context):
@@ -477,7 +502,7 @@ Create a new file for the daily feeding reminders:
   </Tab>
 </Tabs>
 
-This cron step demonstrates scheduled job patterns:
+This Cron Step demonstrates scheduled job patterns:
 - **Runs on schedule** - `cron: '0 8 * * *'` means every day at 8 AM
 - **Processes all pets** - Loops through each pet to send reminders
 - **Different feeding schedules** - Cats get 2 meals, dogs get 3 meals per day
@@ -502,7 +527,7 @@ The final log entry shows the job completion summary with the total number of pe
 
 ## Step 4: Create Weekly Grooming Notifications
 
-Let's create a cron step that runs every Monday to remind pet owners about grooming appointments.
+Let's create a Cron Step that runs every Monday to remind pet owners about grooming appointments.
 
 Create a new file for the weekly grooming notifications:
 
@@ -518,6 +543,7 @@ Create a new file for the weekly grooming notifications:
       name: 'WeeklyGroomingReminder',
       description: 'Send weekly grooming reminders for all pets',
       cron: '0 9 * * 1', // Every Monday at 9:00 AM
+      flows: ["background-jobs"],
     }
 
     export const handler: Handlers['WeeklyGroomingReminder'] = async ({ logger, state }) => {
@@ -587,6 +613,7 @@ Create a new file for the weekly grooming notifications:
       name: 'WeeklyGroomingReminder',
       description: 'Send weekly grooming reminders for all pets',
       cron: '0 9 * * 1', // Every Monday at 9:00 AM
+      flows: ["background-jobs"],
     }
 
     exports.handler = async ({ logger, state }) => {
@@ -656,7 +683,8 @@ Create a new file for the weekly grooming notifications:
         'type': 'cron',
         'name': 'WeeklyGroomingReminder',
         'description': 'Send weekly grooming reminders for all pets',
-        'cron': '0 9 * * 1'  # Every Monday at 9:00 AM
+        'cron': '0 9 * * 1',  # Every Monday at 9:00 AM
+        'flows': ["background-jobs"]
     }
 
     async def handler(context):
@@ -716,11 +744,11 @@ Create a new file for the weekly grooming notifications:
   </Tab>
 </Tabs>
 
-This weekly cron step shows more advanced scheduling:
+This weekly Cron Step shows more advanced scheduling:
 - **Runs every Monday** - `cron: '0 9 * * 1'` means 9 AM on day 1 (Monday) of every week
 - **Breed-specific grooming** - Different pets have different grooming needs
 - **Detailed task lists** - Shows specific grooming tasks for each breed type
-- **Helper function** - Demonstrates code organization within steps
+- **Helper function** - Demonstrates code organization within Steps
 
 This job ensures all pets get appropriate grooming reminders based on their specific needs.
 
@@ -739,7 +767,7 @@ The completion log displays the final summary showing "totalPets: 4" and "remind
 
 ## Step 5: Create Monthly Vet Checkup Alerts
 
-Finally, let's create a cron step that runs on the first day of every month to remind pet owners about veterinary checkups.
+Finally, let's create a Cron Step that runs on the first day of every month to remind pet owners about veterinary checkups.
 
 Create a new file for the monthly vet checkup alerts:
 
@@ -755,6 +783,7 @@ Create a new file for the monthly vet checkup alerts:
       name: 'MonthlyVetReminder',
       description: 'Send monthly veterinary checkup reminders for all pets',
       cron: '0 10 1 * *', // First day of every month at 10:00 AM
+      flows: ["background-jobs"],
     }
 
     export const handler: Handlers['MonthlyVetReminder'] = async ({ logger, state }) => {
@@ -842,6 +871,7 @@ Create a new file for the monthly vet checkup alerts:
       name: 'MonthlyVetReminder',
       description: 'Send monthly veterinary checkup reminders for all pets',
       cron: '0 10 1 * *', // First day of every month at 10:00 AM
+      flows: ["background-jobs"],
     }
 
     exports.handler = async ({ logger, state }) => {
@@ -929,7 +959,8 @@ Create a new file for the monthly vet checkup alerts:
         'type': 'cron',
         'name': 'MonthlyVetReminder',
         'description': 'Send monthly veterinary checkup reminders for all pets',
-        'cron': '0 10 1 * *'  # First day of every month at 10:00 AM
+        'cron': '0 10 1 * *',  # First day of every month at 10:00 AM
+        'flows': ["background-jobs"]
     }
 
     async def handler(context):
@@ -1007,7 +1038,7 @@ Create a new file for the monthly vet checkup alerts:
   </Tab>
 </Tabs>
 
-This monthly cron step demonstrates the most complex scheduling pattern:
+This monthly Cron Step demonstrates the most complex scheduling pattern:
 - **Runs monthly** - `cron: '0 10 1 * *'` means 10 AM on the 1st day of every month
 - **Age-based care** - Senior pets (7+) get enhanced monitoring, young pets need frequent checkups
 - **Urgency levels** - Different pets have different health priorities
