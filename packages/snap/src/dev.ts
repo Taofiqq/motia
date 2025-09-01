@@ -12,6 +12,7 @@ import { flush } from '@amplitude/analytics-node'
 import { generateLockedData, getStepFiles } from './generate-locked-data'
 import { createDevWatchers } from './dev-watchers'
 import { stateEndpoints } from './dev/state-endpoints'
+import { deployEndpoints } from './cloud/endpoints'
 import { activatePythonVenv } from './utils/activate-python-env'
 import { identifyUser } from './utils/analytics'
 import { version } from './version'
@@ -75,6 +76,8 @@ export const dev = async (
 
   stateEndpoints(motiaServer, state)
 
+  deployEndpoints(motiaServer, lockedData)
+
   motiaServer.server.listen(port, hostname)
   console.log('🚀 Server ready and listening on port', port)
   console.log(`🔗 Open http://${hostname}:${port}/ to open workbench 🛠️`)
@@ -95,7 +98,7 @@ export const dev = async (
       require('@motiadev/workbench/middleware')
     : // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('@motiadev/workbench/dist/middleware')
-  await applyMiddleware(motiaServer.app)
+  await applyMiddleware(motiaServer.app, port)
 
   // 6) Gracefully shut down on SIGTERM
   process.on('SIGTERM', async () => {
