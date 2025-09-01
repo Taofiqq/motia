@@ -1,31 +1,277 @@
 ---
 title: API Endpoints
-description: Learn how to build a complete REST API with CRUD operations using Motia. This guide covers HTTP endpoints, request validation, and response handling.
+description: Build complete API endpoints for the pet store application. Learn how to add new pets, view pet details, update pet information, and remove pets using Motia's approach.
 ---
-If you haven't already, follow the [Quick Start Guide](/docs/getting-started/quick-start) to create a Motia project. This tutorial assumes you have a working project with the development server running.
 
-REST APIs are one of the fundamental foundations of most modern web architectures, especially for client-server communication. They allow clients to interact with your backend through standard HTTP methods like GET, POST, PUT, and DELETE. In Motia, creating APIs is straightforward, you define endpoints as API Steps.
-This guide will walk you through building a complete REST API in Motia. You'll learn how to create HTTP endpoints, validate requests, handle responses, and implement full CRUD operations for a pet store application.
+# API Endpoints
 
-## REST API Concepts You'll Use
+In this section, you'll:
+- Start with a simple **GET /pets** endpoint.
+- Then add more endpoints: **view one pet, create, update, and delete**.
+- Learn the **API Step** shape (config + handler) and where files live.
+- **Run & test** each endpoint in Workbench and with `curl`.
+- **Practice with a quick exercise** to reinforce your learning.
 
-Before we start building, let's cover the key concepts for creating REST APIs in Motia:
+> **Why start with `GET /pets`?**  
+> Every app begins with reading data. Listing pets provides a quick and clear way to explain Motia’s API Step without extra concepts like validation.
 
-- **API Step** – A file that defines an HTTP endpoint with validation schemas and request handling logic.
-- **HTTP Methods** – GET (retrieve), POST (create), PUT (update), DELETE (remove) operations on resources.
-- **Response Handling** – Returning proper HTTP status codes and structured JSON responses.
-- **Path Parameters** – Dynamic URL segments like `/pets/:id` to identify specific resources.
+---
 
-## API Step Structure
+## Before you start
+- You’ve completed the **[Quick Start](https://www.motia.dev/docs/getting-started/quick-start)** guide or cloned the **[Starter Template](https://github.com/MotiaDev/build-your-first-app)** from the repository.
+- `npx motia dev` is running so the **Workbench** is available at `http://localhost:3000`.
 
-Every API endpoint in Motia consists of two parts that work together:
+---
 
-| Component | Type | Description |
-|-----------|------|-------------|
-| **`ApiRouteConfig`** | `object` | Configuration object that defines the HTTP endpoint structure, including the path, method, and validation schemas. This is where you specify what your API endpoint looks like and how it validates requests. |
-| **`Handlers[StepName]`** | `function` | The handler function that contains your business logic. It receives the HTTP request and returns an HTTP response with the appropriate status code and data. |
+## Step 1 — Create the endpoint file
 
-## Building a Pet Store REST API
+We will place our step inside the `steps` folder. Depending on how you started your project, you have two options:
+
+- **If you cloned the Starter Template** → the `steps` folder already has language-specific subfolders (`typescript`, `javascript`, `python`). Create your new file inside the folder for your language.  
+- **If you used the Quick Start guide** → the `steps` folder does not include any language-specific subfolders. Create a subfolder for your language (e.g. `steps/typescript`) and put your file inside it. You can create just one language folder to follow along, or set up for the three languages, if you would like to experiment.
+
+<Tabs items={['TypeScript', 'JavaScript', 'Python']}>
+<Tab value="TypeScript">
+Create: `steps/typescript/get-pets.step.ts`
+</Tab>
+<Tab value="JavaScript">  
+Create: `steps/javascript/get-pets.step.js`
+</Tab>
+<Tab value="Python">
+Create: `steps/python/get_pets.step.py`
+</Tab>
+</Tabs>
+
+At this point, you should have a new file named `get-pets.step.ts` (or `.js` / `.py` depending on your language) inside your chosen language folder. In the next step, you will define the `config` and `handler` that make up your first API Step.
+
+## Step 2 — Define the API Step
+
+Now add the code that creates your first API endpoint. Copy this into your file:
+
+<Tabs items={['TS', 'JS', 'Python']}>
+  <Tab value="TS">
+    ```typescript
+import { ApiRouteConfig, Handlers } from "motia";
+import { z } from "zod";
+
+export const config: ApiRouteConfig = {
+  type: "api",
+  name: "GetPets",
+  description: "Get all pets in the store",
+  method: "GET",
+  path: "/typescript/pets",
+  responseSchema: {
+    200: z.object({
+      pets: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        })
+      ),
+    }),
+  },
+  emits: [],
+  flows: ["api-endpoints-typescript"],
+};
+
+export const handler: Handlers["GetPets"] = async (req, { logger }) => {
+  logger.info("Getting all pets");
+
+  // In a real app, you will query from a database
+  const pets = [
+    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+    { id: "2", name: "Luna", breed: "Border Collie", age: 2 },
+    { id: "3", name: "Max", breed: "German Shepherd", age: 5 },
+  ];
+
+  return {
+    status: 200,
+    body: { pets },
+  };
+};
+
+    ```
+  </Tab>
+  <Tab value="JS">
+    ```javascript
+    const { z } = require("zod");
+
+const config = {
+  type: "api",
+  name: "GetPets",
+  description: "Get all pets in the store",
+  method: "GET",
+  path: "/javascript/pets",
+  responseSchema: {
+    200: z.object({
+      pets: z.array(
+        z.object({
+          id: z.string(),
+          name: z.string(),
+          breed: z.string(),
+          age: z.number(),
+        })
+      ),
+    }),
+  },
+  emits: [],
+  flows: ["api-endpoints-javascript"],
+};
+
+const handler = async (req, { logger }) => {
+  logger.info("Getting all pets");
+
+  // In a real app, you will query from a database
+  const pets = [
+    { id: "1", name: "Buddy", breed: "Golden Retriever", age: 3 },
+    { id: "2", name: "Luna", breed: "Border Collie", age: 2 },
+    { id: "3", name: "Max", breed: "German Shepherd", age: 5 },
+  ];
+
+  return {
+    status: 200,
+    body: { pets },
+  };
+};
+
+module.exports = { config, handler };
+    ```
+  </Tab>
+  <Tab value="Python">
+    ```python
+from pydantic import BaseModel
+from typing import List
+
+
+class PetResponse(BaseModel):
+    id: str
+    name: str
+    breed: str
+    age: int
+
+
+config = {
+    "type": "api",
+    "name": "GetPets",
+    "description": "Get all pets in the store",
+    "method": "GET",
+    "path": "/python/pets",
+    "emits": [],
+    "responseSchema": {
+        "200": {
+            "type": "object",
+            "properties": {
+                "pets": {"type": "array", "items": PetResponse.model_json_schema()}
+            },
+            "required": ["pets"],
+        }
+    },
+    "flows": ["api-endpoints-python"],
+}
+
+
+async def handler(req, context):
+    context.logger.info("Retrieving all pets")
+
+    # In a real app, you'd fetch from a database
+    pets = [
+        {"id": "1", "name": "Buddy", "breed": "Golden Retriever", "age": 3},
+        {"id": "2", "name": "Max", "breed": "German Shepherd", "age": 5},
+    ]
+
+    return {"status": 200, "body": {"pets": pets}}
+
+    ```
+  </Tab>
+</Tabs>
+
+**What this code does**
+
+- **`config`** → This object tells Motia everything about the endpoint:  
+  - It’s an **API** step.  
+  - It should respond to **GET /pets**.  
+  - It describes the shape of the JSON response (an array of pets with `id`, `name`, `breed`, `age`).
+  - `emits` allows your step to send events to other parts of your system
+  - `flows` organizes related steps together for better visualization in the Workbench
+  - We'll use both of these more in the upcoming sections. You can read more about [events](/docs/concepts/cli#emit) and [flows](/docs/concepts/flows-and-visualization) in the documentation.  
+
+- **`handler`** → This function is what actually runs when someone visits **/pets**.  
+  - It logs the request.  
+  - It builds a mock list of pets (hard-coded here, but in a real app you’d fetch from a database).  
+  - It returns the data wrapped in an HTTP **200 OK** response.  
+
+So, when you run this step and hit `/pets`, Motia will:  
+1. Match the request to the config.  
+2. Call your handler.  
+3. Send back the pets list as JSON.  
+
+Save the file. Your development server will automatically detect the new endpoint.  
+
+Open the **Workbench** at [http://localhost:3000](http://localhost:3000). You’ll see the endpoint appear in the flow that matches your language:  
+
+- `api-endpoints-typescript` if you added the TypeScript file  
+- `api-endpoints-javascript` if you added the JavaScript file  
+- `api-endpoints-python` if you added the Python file  
+
+For example, after saving the JavaScript version, the Workbench will show a **GetPets** step under the `api-endpoints-javascript` flow:  
+
+![Workbench showing GetPets endpoint](./../../img/get-pets-endpoint-js.png)  
+
+This confirms Motia has picked up your new API step and made it available.  
+
+### Test the endpoint
+
+You can test your new endpoint in two ways:
+
+#### 1. Using the Workbench  
+Go to the **Endpoints** tab in the Workbench. You will see your endpoint listed under the flow for your language (e.g. `/typescript/pets`, `/javascript/pets`, or `/python/pets`).  
+![Workbench Endpoints tab showing GET /pets](./../../img/get-pets-endpoint-list.png) 
+
+Click on any of the endpoints, this will open the **Details** tab, where you can review the endpoint's description and response schema.  
+![Workbench GetPets endpoint details](./../../img/get-all-pets-details.png)
+
+- The **description** is the text you set in your `config` (`"Get all pets in the store"`).  
+- The **response schema** shows the expected shape of the data (an array of pets with `id`, `name`, `breed`, `age`).  
+- This helps you confirm that Motia understood your step correctly before you even make a call.  
+
+Next, switch to the **Call** tab, press **Play**, and Motia will call the endpoint for you. The response will appear in the panel on the right.    
+![Workbench GetPets endpoint call](./../../img/get-pets-endpoint-call.png)
+
+What happens behind the scenes?
+
+- The request goes to `GET /pets`.  
+- Motia matches it to the `config` you defined.  
+- It runs your `handler` function, which logs the request and returns the mock pets list.  
+- The response (with status **200 OK**) appears on the right, showing the JSON data you defined.  
+
+This confirms that your first Motia endpoint is live and working!
+
+#### 2. Using curl  
+If you prefer the terminal, you can call the endpoint directly with `curl`:  
+
+```bash
+curl http://localhost:3000/javascript/pets
+```
+And you should see the JSON response:
+
+```json
+{
+  "pets": [
+    { "id": "1", "name": "Buddy", "breed": "Golden Retriever", "age": 3 },
+    { "id": "2", "name": "Luna", "breed": "Border Collie", "age": 2 },
+    { "id": "3", "name": "Max", "breed": "German Shepherd", "age": 5 }
+  ]
+}
+```
+That is it — you just created and tested your first REST API endpoint in Motia. 
+
+With just a `config` object and a `handler` function, you exposed `GET /pets` and saw it return real JSON in the Workbench or via `curl`.
+
+This is the foundation you will build on. In the next steps, we will add more endpoints to view a single pet, create new ones, update them, and even delete them.
+
+{/* ## Building a Pet Store REST API
 
 Now that you understand the core parts of an API endpoint, let's build a complete REST API for a pet store.
 
@@ -836,4 +1082,4 @@ You now have a full CRUD REST API. Here are all the endpoints you can test:
 - `PUT /pets/:id` - Update a pet
 - `DELETE /pets/:id` - Delete a pet
 
-You can test each endpoint using the Workbench interface or with curl commands. This covers all the essential patterns you'll need for building REST APIs.
+You can test each endpoint using the Workbench interface or with curl commands. This covers all the essential patterns you'll need for building REST APIs. */}
