@@ -7,6 +7,7 @@ import { version } from '../version'
 import { CliContext } from '../cloud/config-utils'
 import { setupTemplate } from './setup-template'
 import { checkIfFileExists, checkIfDirectoryExists } from './utils'
+import { pullRules } from './pull-rules'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 require('ts-node').register({
@@ -90,8 +91,8 @@ const wrapUp = async (context: CliContext, packageManager: string) => {
 
 type Args = {
   projectName: string
-  template?: string
-  cursorEnabled?: boolean
+  template: string
+  cursorEnabled: boolean
   context: CliContext
   skipTutorialTemplates?: boolean
 }
@@ -217,14 +218,8 @@ export const create = async ({ projectName, template, cursorEnabled, context }: 
     )
   }
 
-  const cursorTemplateDir = path.join(__dirname, '../../dot-files/.cursor')
-  const cursorTargetDir = path.join(rootDir, '.cursor')
-
-  if (cursorEnabled && !checkIfDirectoryExists(cursorTargetDir)) {
-    fs.cpSync(cursorTemplateDir, cursorTargetDir, { recursive: true })
-    context.log('cursor-folder-created', (message) =>
-      message.tag('success').append('Folder').append('.cursor', 'cyan').append('has been created.'),
-    )
+  if (cursorEnabled) {
+    await pullRules({ force: true, rootDir }, context)
   }
 
   if (template) {
